@@ -9,6 +9,19 @@ import numpy as np
 from newick import *
 
 def hierarchical_F1(true_labels, pred_labels, tree):
+    '''
+    Calculate the hierarchical F1-score
+    
+    Parameters
+    ----------
+    true_labels: vector with the true labels 
+    pred_labels: vector with the predicted labels
+    tree: classification tree used to predict the labels
+        
+    Return
+    ------
+    hF1: hierarchical F1-score
+    '''
     
     sum_p = 0
     sum_t = 0

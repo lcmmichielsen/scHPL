@@ -10,7 +10,6 @@ import numpy as np
 import pandas as pd
 from sklearn.decomposition import PCA
 from scipy.stats import ttest_ind
-import time as tm
 from newick import *
 
 
@@ -22,23 +21,15 @@ def train_tree(data, labels, tree, classifier = 'svm_occ', dimred = True):
     ----------
     data: training data (cells x genes)
     labels: labels of the training data
-    tree: tree build for the training data using newick.py
+    tree: classification tree (build for the training data using newick.py)
     classifier: which classifier to use ('svm' or 'svm_occ')
-    
+    dimred: if dimensionality reduction should be applied
     
     Return
     ------
-    Score: the scores of the positive and negative samples for each node
-    (these scores can be used to find the minimum, 1st perc., and 0.5th perc.
-    offset)
-    Offset: the default offset for each node
-    Name: name of each node (same order as the scores, so the scores can be 
-    linked to a cell populations)
+    tree: trained classification tree
     '''
     
-    score  = []
-    name = []
-    offset = []
     numgenes = np.shape(data)[1]
     
     if(dimred == True):
@@ -48,52 +39,60 @@ def train_tree(data, labels, tree, classifier = 'svm_occ', dimred = True):
         data = pca.transform(data)
         data = pd.DataFrame(data)
     
-    #recursively train the tree
+    #recursively train the classifiers for each node in the tree
     for n in tree[0].descendants:
-        group = train_classifier(data, labels, n, classifier, dimred, score, name, offset, numgenes)
+        group = train_node(data, labels, n, classifier, dimred, numgenes)
 
-    return score, name, offset
+    return tree
 
 
-def train_classifier(data, labels, n, classifier, dimred, score, name, offset, numgenes):
+def train_node(data, labels, n, classifier, dimred, numgenes):
+    '''
+    Train a linear of one-class SVM for a node.
     
-    scores = 0
-    o = 0
+    Parameters
+    ----------
+    data: training data
+    labels: labels of the training data
+    n: node to train the classifier for
+    classifier: which classifier to use
+    dimred: dimensionality reduction
+    numgenes: number of genes in the training data
     
+    Return
+    ------
+    group: vector which indicates the positive samples of a node
+    
+    '''
+    
+    group = np.zeros(len(labels), dtype = int)
+
     if n.is_leaf:
-        group = np.zeros(len(labels), dtype = int)
         group[np.where(labels == n.name)[0]] = 1
     else:
-        group = np.zeros(len(labels), dtype = int)
         if n.name != None:
             group[np.where(labels == n.name)[0]] = 1
         for j in n.descendants:
-            group_new = train_classifier(data, labels, j, classifier, dimred, score, name, offset, numgenes)
+            group_new = train_node(data, labels, j, classifier, dimred, numgenes)
             group[np.where(group_new == 1)[0]] = 1
             
     if(dimred):
-        data = apply_pca(data, labels, group, n, numgenes)
+        data = find_pcs(data, labels, group, n, numgenes)
     
     if(classifier == 'svm'):
         train_svm(data, labels, group, n)
     else:
-        scores, o = train_occ(data, labels, group, n)
-    
-    score.append(scores)
-    name.append(n.name)
-    offset.append(o)
-    
+        train_occ(data, labels, group, n)
+        
     return group
 
 
-def apply_pca(data, labels, group, n, numgenes):
+def find_pcs(data, labels, group, n, numgenes):
     '''
-    Apply pca to the data and afterwards do a ttest to find the pcs that explain 
-    the variance between the node and the rest.
+    Do a ttest between the positive and negative samples to find explaining pcs
     '''
     
-    
-    group = find_sisternodes(labels, group, n)
+    group = find_negativesamples(labels, group, n)
     
     # positive samples
     this_class = np.where(group == 1)[0]
@@ -113,6 +112,7 @@ def apply_pca(data, labels, group, n, numgenes):
     
     data = data.iloc[:,explaining_pcs]
     
+    # Save the explaining pcs in the tree
     n.set_pca(None, explaining_pcs)
     
     return data
@@ -129,14 +129,13 @@ def train_svm(data, labels, group, n):
     n: node
     '''
     
-    group = find_sisternodes(labels, group, n) 
-
     # group == 1 --> positive samples
     # group == 2 --> negative samples
+    group = find_negativesamples(labels, group, n) 
     idx_svm = np.where((group == 1) | (group == 2))[0]
     data_svm = data.iloc[idx_svm]
     group_svm = group[idx_svm]
-
+    
     clf = svm.LinearSVC().fit(data_svm, group_svm)
     n.set_classifier(clf) #save classifier to the node
     
@@ -153,24 +152,14 @@ def train_occ(data, labels, group, n):
     n: node
     '''
     
-    scores = []
-    group = find_sisternodes(labels, group, n)           
-
-    # group == 1 --> positive samples
-    # group == 2 --> negative samples
     data_group = data.iloc[np.where(group == 1)[0]]
-    data_other = data.iloc[np.where(group == 2)[0]]
+    
     clf = svm.OneClassSVM(gamma = 'scale', nu = 0.05).fit(data_group)
-    scores_group = clf.score_samples(data_group)
-    scores_other = clf.score_samples(data_other)
-    scores.append(scores_group)
-    scores.append(scores_other)
-    off = clf.offset_
     n.set_classifier(clf) #save classifier to the node
     
-    return scores, off
+    return 
 
-def find_sisternodes(labels, group, n):
+def find_negativesamples(labels, group, n):
     
     a = n.ancestor
     
@@ -180,7 +169,7 @@ def find_sisternodes(labels, group, n):
             for j in i.walk():
                 group[np.where(labels == j.name)[0]] = 2
                 
-    # If we find no sisters, we compare with the other samples of its ancestor?
+    # If we find no sisters, we compare with the other samples of its ancestor
     if(len(np.where(group == 2)[0])) == 0:
         group[np.where(labels == a.name)[0]] = 2
 

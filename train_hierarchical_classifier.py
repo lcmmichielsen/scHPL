@@ -13,9 +13,9 @@ from build_classifier import *
 from predict_labels import *
 from update_tree import *
 
-def train_hierarchical_classifier(data, labels, classifier = 'svm_occ', dimred = True, offset_touse = 'Default', threshold = 0.25):
+def train_hierarchical_classifier(data, labels, classifier = 'svm_occ', dimred = True, threshold = 0.25):
     '''
-    Apply the hierarchical progressive learning pipelin 
+    Apply the hierarchical progressive learning pipeline 
     
     Parameters
     ----------
@@ -24,14 +24,11 @@ def train_hierarchical_classifier(data, labels, classifier = 'svm_occ', dimred =
     labels: the labels of each dataset
     classifier: the classifier to use, either ('svm' or 'svm_occ')
     dimred: whether to apply dimensionality reduction or not
-    offset: which offset to use for the one-class SVM ('Default', '1st', 
-    '0.5th' or 'Minimum')
     threshold: threshold to use during the matching of the labels
     
     Return
     ------
     tree_c: trained classification tree
-    offset_final: offset used
     '''
     
     num_batches = len(data)
@@ -49,28 +46,15 @@ def train_hierarchical_classifier(data, labels, classifier = 'svm_occ', dimred =
         tree_2 = loads('root2')
         tree_2 = construct_tree(tree_2, labels_2)
         
-        ### Train the first tree
-        scores, names, offset = train_tree(data_c, labels_c, tree_c, 
-                                           classifier = classifier, 
-                                           dimred = dimred)
+        # Train the trees
+        tree_c = train_tree(data_c, labels_c, tree_c, classifier, dimred)
+        tree_2 = train_tree(data_2, labels_2, tree_2, classifier, dimred)
+
+        # Predict labels other dataset
+        labels_2_pred = predict_labels(data_2, tree_c)
+        labels_c_pred = predict_labels(data_c, tree_2)
         
-        offset_c = get_offset(scores,names,offset, offset_touse)
-        
-        ### Predict labels second dataset
-        labels_2_pred = predict_labels(data_2, tree_c, offsets = offset_c)
-        
-        ### Train the second tree
-        scores, names, offset = train_tree(data_2, labels_2, tree_2, 
-                                           classifier = classifier, 
-                                           dimred = dimred)
-        
-        
-        offset_2 = get_offset(scores,names,offset, offset_touse)
-        
-        ### Predict labels first dataset
-        labels_c_pred = predict_labels(data_c, tree_2, offsets = offset_2)
-        
-        ### Update first tree and labels second dataset
+        # Update first tree and labels second dataset
         tree_c, labels_2_new = update_tree(labels_c.values, 
                                            labels_c_pred.reshape(-1,1),
                                            labels_2.values,
@@ -90,20 +74,15 @@ def train_hierarchical_classifier(data, labels, classifier = 'svm_occ', dimred =
         data_c = pd.DataFrame(np.concatenate((data_c, data_2), axis = 0))
         labels_c = pd.DataFrame(np.concatenate((np.squeeze(labels_c), np.squeeze(labels_2_new)), 
                                 axis = 0))
-        
-        print('\n\nNew labels:', np.unique(labels_c))
+            
     
     
     
+    # Train the final tree
+    tree_c = train_tree(data_c, labels_c, tree_c, classifier, dimred)
     
-    ### Train the final tree
-    scores, names, offset = train_tree(data_c, labels_c, tree_c, 
-                                       classifier = classifier, 
-                                       dimred = dimred)
     
-    offset_final = get_offset(scores,names,offset, offset_touse)
-    
-    return tree_c, offset_final
+    return tree_c
     
     
 
@@ -119,27 +98,3 @@ def construct_tree(tree, labels):
         tree[0].add_descendant(newnode)
         
     return tree
-
-def get_offset(scores, names, offset, offset_touse):
-    
-    if(offset_touse == 'Default'):
-        o = {}
-        for i in range(len(names)):
-            o[names[i]] = offset[i]
-
-    elif(offset_touse == '1st'):
-        o = {}
-        for i in range(len(names)):
-            o[names[i]] = np.percentile(scores[i][0],1)
-    
-    elif(offset_touse == '0.5th'):
-        o = {}
-        for i in range(len(names)):
-            o[names[i]] = np.quantile(scores[i][0],0.005)
-
-    else:
-        o = {}
-        for i in range(len(names)):
-            o[names[i]] = np.min(scores[i][0])
-        
-    return o
