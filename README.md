@@ -20,7 +20,7 @@ Next, the ```train_tree``` function from ```build_classifier.py``` can be used t
 from build_classifier import *
 tree = train_tree(data, labels, tree, classifier = 'svm_occ', dimred = True)
 ```
-This function assumes that data is matrix (cells x genes) and the labels are a 1D vector. If you want to train the tree with a linear SVM for each node instead of a one-class SVM, ```classifier = 'svm'``` can be used. The parameter ```dimred``` indicated whether dimensionality reduction is applied.
+This function assumes that data is matrix (cells x genes) and the labels are a 1D vector. If you want to train the tree with a linear SVM for each node instead of a one-class SVM, ```classifier = 'svm'``` can be used. The parameter ```dimred``` indicates whether dimensionality reduction is applied.
 
 #### Training a classifier with progressive learning
 If you have multiple labeled datasets, the ```train_hierarchical_classifier``` function from ```train_hierarchical_classifier.py``` can be used to construct and train a classification tree:
@@ -30,7 +30,7 @@ from train_hierachical_classifier import *
 tree = train_hierarchical_classifier(data, labels, classifier = 'svm_occ', dimred = True, threshold = 0.25)
 ```
 
-This function assumes that data is a list containing all *n* datasets (n x cells x genes) and that labels contains the labels of all datasets (n x cells). If you want to train the tree with a linear SVM for each node instead of a one-class SVM, ```classifier = 'svm'``` can be used. The parameter ```dimred``` indicated whether dimensionality reduction is applied. ```threshold``` indicated which threshold to use when matching the labels of two datasets.
+This function assumes that data is a list containing all *n* datasets (n x cells x genes) and that labels contains the labels of all *n* datasets (n x cells). If you want to train the tree with a linear SVM for each node instead of a one-class SVM, ```classifier = 'svm'``` can be used. The parameter ```dimred``` indicated whether dimensionality reduction is applied. ```threshold``` indicated which threshold to use when matching the labels of two datasets.
 
 
 #### Prediction
