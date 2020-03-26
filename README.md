@@ -30,7 +30,7 @@ from train_hierachical_classifier import *
 tree = train_hierarchical_classifier(data, labels, classifier = 'svm_occ', dimred = True, threshold = 0.25)
 ```
 
-This function assumes that data is a list containing all *n* datasets (n x cells x genes) and that labels contains the labels of all *n* datasets (n x cells). If you want to train the tree with a linear SVM for each node instead of a one-class SVM, ```classifier = 'svm'``` can be used. The parameter ```dimred``` indicated whether dimensionality reduction is applied. ```threshold``` indicated which threshold to use when matching the labels of two datasets.
+This function assumes that data is a list containing all *n* datasets (n x cells x genes) and that labels contains the labels of all *n* datasets (n x cells). If you want to train the tree with a linear SVM for each node instead of a one-class SVM, ```classifier = 'svm'``` can be used. The parameter ```dimred``` indicates whether dimensionality reduction is applied. ```threshold``` indicates which threshold to use when matching the labels of two datasets.
 
 
 #### Prediction
