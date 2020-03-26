@@ -43,7 +43,7 @@ y_pred = predict_labels(test_data, tree)
 
 This function uses the testdata (cells x genes) and trained classification tree and returns a vector with the predicted labels. 
 
-### Evaluation
+#### Evaluation
 The ```hierarchical_F1``` function form ```hierarchical_F1.py``` can be used to calculate the hierarchical F1-score and evaluate the classification. 
 
 ```Python
