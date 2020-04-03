@@ -2,8 +2,12 @@
 
 We present a hierarchical progressive learning method which automatically finds relationships between cell populations across multiple datasets and uses this to construct a hierarchical classification tree. For each node in the tree either a linear SVM or one-class SVM, which enables the detection of unknown populations, is trained. The trained classification tree can be used to predict the labels of a new unlabeled dataset. 
 
+To run the pipeline, Python 3.6 and the scipy and scikit-learn libraries need be installed.
+
+Below, a short explanation to use the pipeline can be found. 
+
 ### General usage
-If you have multiple labeled dataset, progressive learning can be used to match the labels of the datasets and train a classification tree on all datasets. In case of one labeled dataset, the classification tree can be trained on one dataset without progressive learning. In both cases, the function returns a trained classification tree. 
+If you have multiple labeled datasets, progressive learning can be used to match the labels of the datasets and train a classification tree on all datasets. In case of one labeled dataset, the classification tree can be trained on one dataset without progressive learning. In both cases, the function returns a trained classification tree. 
 
 #### Training a classifier without progressive learning
 First, a tree needs to be constructed for the dataset. This can be done using the ```loads``` function from ```newick.py```. An example to construct a classification tree for a PBMC data is shown below:
