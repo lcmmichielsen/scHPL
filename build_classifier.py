@@ -11,8 +11,10 @@ import pandas as pd
 from sklearn.decomposition import PCA
 from scipy.stats import ttest_ind
 from newick import *
+from sklearn.utils._testing import ignore_warnings
+from sklearn.exceptions import ConvergenceWarning
 
-
+@ignore_warnings(category=ConvergenceWarning)
 def train_tree(data, labels, tree, classifier = 'svm_occ', dimred = True):
     '''
     Train the hierarchical classifier. 
@@ -136,7 +138,7 @@ def train_svm(data, labels, group, n):
     data_svm = data.iloc[idx_svm]
     group_svm = group[idx_svm]
     
-    clf = svm.LinearSVC().fit(data_svm, group_svm)
+    clf = svm.LinearSVC(random_state=1).fit(data_svm, group_svm)
     n.set_classifier(clf) #save classifier to the node
     
         

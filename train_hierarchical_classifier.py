@@ -7,7 +7,6 @@ Created on Fri Nov 22 14:11:01 2019
 
 import pandas as pd
 import numpy as np
-import time as tm
 from newick import *
 from build_classifier import *
 from predict_labels import *
@@ -41,6 +40,8 @@ def train_hierarchical_classifier(data, labels, classifier = 'svm_occ', dimred =
     
     for i in range(num_batches-1):
         
+        print('Iteration ', str(i+1), '\n')
+        
         data_2 = data[i+1]
         labels_2 = labels[i+1]
         tree_2 = loads('root2')
@@ -61,14 +62,17 @@ def train_hierarchical_classifier(data, labels, classifier = 'svm_occ', dimred =
                                            labels_2_pred.reshape(-1,1),
                                            threshold, tree_c)
         
-        print('\n\nUpdate tree:')
+        print('\nUpdated tree:')
         print('Root:', tree_c[0])
         for n in tree_c[0].descendants:
             print(n.name)
             for i in n.descendants:
-                print(n.name, i.name)
+                print('\t', i.name)
                 for j in i.descendants:
-                    print(n.name, i.name, j.name)
+                    print('\t\t', j.name)
+                    for k in j.descendants:
+                        print('\t\t\t', k.name)
+        print('\n')
         
         #concatenate the two datasets
         data_c = pd.DataFrame(np.concatenate((data_c, data_2), axis = 0))

@@ -64,7 +64,7 @@ def confusion_binary(y_true, y_pred, threshold):
             NC[i,j] = sum(a & b)/ sum(a)
 
     NC = pd.DataFrame(NC, columns = np.unique(y_pred), index = np.unique(y_true))
-    print(NC.values)
+#    print(NC.values)
     
     
     # Convert NC to BC
@@ -91,8 +91,8 @@ def confusion_binary(y_true, y_pred, threshold):
         else:
             break
     
-    print('thresholded')    
-    print(BC)
+#    print('thresholded')    
+#    print(BC)
     
     return BC
 
@@ -110,7 +110,7 @@ def match_trees(X, tree, y_true):
     name_root2 = 'root2'
 
     binary = X > 0
-    print(binary.values)
+#    print(binary.values)
     
     strict = X > 1
     
@@ -129,7 +129,7 @@ def match_trees(X, tree, y_true):
     
     # scan strict matrix if needed
     if (np.any(strict)):
-        print('\n\n\n Start strict')
+#        print('\n\n\n Start strict')
         binary, y_true = scan_binary(strict, name_root1, name_root2, y_true, tree)
     
     return y_true
@@ -178,7 +178,7 @@ def find_scenario(i, j, idx, jdx, rowsum, colsum, binary, name_root1, name_root2
         
     # Simple scenario
     if ((i == 1) & (j == 1)):
-        print('Simple')
+#        print('Simple')
         
         # Check if root1 is involved, if so -> new population
         if binary.columns.values[idx] == name_root1:
@@ -194,14 +194,14 @@ def find_scenario(i, j, idx, jdx, rowsum, colsum, binary, name_root1, name_root2
         else:
             pred_value = binary.columns.values[idx]
             cluster_value = binary.index.values[jdx]
-            print('Old label', cluster_value, 'is now:', pred_value)
+            print('Perfect match: ', cluster_value, 'is now:', pred_value)
             y_true[np.where(y_true == cluster_value)[0]] = pred_value
             binary.iloc[jdx,idx] = False
      
     
     # Multiple populations from dataset 2 involved
     elif ((i > 1) & (j == 1)):
-        print('Colsums')
+#        print('Colsums')
         CP_D1 = binary.columns.values[idx] # cell population from dataset 1
         
         # Find cell populations from D2 involved and check if these cell
@@ -213,7 +213,7 @@ def find_scenario(i, j, idx, jdx, rowsum, colsum, binary, name_root1, name_root2
         CP_D2_complex = CP_D2_complex[np.where(CP_D2_complex != name_root2)[0]]
 
         if len(CP_D2_complex) > 0:
-            print('stop')
+#            print('stop')
             return binary, y_true
         
         CP_D2 = binary.index.values[CP_D2_idx]
@@ -223,11 +223,11 @@ def find_scenario(i, j, idx, jdx, rowsum, colsum, binary, name_root1, name_root2
     
     # Multiple populations from dataset 1 involved
     elif (i == 1) & (j > 1):
-        print('rowsums')
+#        print('rowsums')
         CP_D2 = binary.index.values[jdx]
         
         if CP_D2 == name_root2:
-            print('want to add root node 2, return')
+#            print('want to add root node 2, return')
             return binary, y_true
         
         # Find cell populations from D1 involved and check if these cell
@@ -239,25 +239,25 @@ def find_scenario(i, j, idx, jdx, rowsum, colsum, binary, name_root1, name_root2
         CP_D1_complex = CP_D1_complex[np.where(CP_D1_complex != name_root1)[0]]
 
         if len(CP_D1_complex) > 0:
-            print('stop')
+#            print('stop')
             return binary, y_true
         
         CP_D1 = binary.columns.values[CP_D1_idx]
-        print('To merge:', CP_D1)
-        print('To add:', CP_D2)
+#        print('To merge:', CP_D1)
+#        print('To add:', CP_D2)
         y_true = merge_node(tree, CP_D1, CP_D2, y_true)
         binary.iloc[jdx,:] = False
 
     # Complex scenario, multiple CP from D1 and D2 involved
     else:
-        print('complex')
+#        print('complex')
         CP_D2_idx = np.where(binary.iloc[:,idx] == True)[0]
         CP_D2 = binary.index.values[CP_D2_idx]
-        print('rownodes', CP_D2)
+#        print('rownodes', CP_D2)
         
         CP_D1_idx = np.where(binary.iloc[jdx] == True)[0]
         CP_D1 = binary.columns.values[CP_D1_idx]
-        print('colnodes', CP_D1)
+#        print('colnodes', CP_D1)
         
         # check if it is a very complex scenario (e.g. we have a square)
         CP_D2_rowsum = rowsum[CP_D2_idx]
@@ -269,7 +269,7 @@ def find_scenario(i, j, idx, jdx, rowsum, colsum, binary, name_root1, name_root2
         CP_D1_complex = CP_D1_complex[np.where(CP_D1_complex != name_root1)[0]]
         
         if (len(CP_D2_complex) > 1) | (len(CP_D1_complex) > 1):
-            print('stop, very complex')
+#            print('stop, very complex')
             return binary, y_true
         
         
@@ -295,10 +295,10 @@ def find_scenario(i, j, idx, jdx, rowsum, colsum, binary, name_root1, name_root2
         
         # Check if the difficult node is a leaf node
         CP_D1_difficult = binary.columns.values[idx]
-        print('difficultnode', CP_D1_difficult)
+#        print('difficultnode', CP_D1_difficult)
         
         if np.isin(CP_D1_difficult, tree[0].get_leaf_names()) == False:
-            print('Not a leaf')
+#            print('Not a leaf')
             
             # Check is CP_D1_difficult is the common ancestor of the rest of CP_D1
             count = 0
@@ -317,12 +317,12 @@ def find_scenario(i, j, idx, jdx, rowsum, colsum, binary, name_root1, name_root2
                         binary.iloc[:,idx] = False
                         binary.iloc[jdx] = False
                         return binary, y_true
-                    else:
-                        print('Impossible now')
+#                    else:
+#                        print('Impossible now')
                     break
             
         else:
-            print('It is a leaf')
+#            print('It is a leaf')
             if (len(CP_D2) == 2) & np.isin(name_root2, CP_D2):
                 CP_D2 = CP_D2[np.where(CP_D2 != name_root2)[0]]
                 CP_D2 = CP_D2[0]
@@ -330,8 +330,8 @@ def find_scenario(i, j, idx, jdx, rowsum, colsum, binary, name_root1, name_root2
                 binary.iloc[:,idx] = False
                 binary.iloc[jdx] = False
                 return binary, y_true
-            else:
-                print('Impossible now')
+#            else:
+#                print('Impossible now')
 
             
     return binary, y_true
@@ -380,7 +380,7 @@ def merge_node(tree, CP_D1, CP_D2, y_true):
     ------
     y_true: updated labels of dataset 2
     '''
-    print('Merge node')
+#    print('Merge node')
     
     # In the complex scenario it can happen that CP_D2 is already in the tree
     # If so -> rewire CP_D2 to this node
@@ -401,7 +401,7 @@ def merge_node(tree, CP_D1, CP_D2, y_true):
             return y_true
     
     
-    print('Check scenario 1')
+#    print('Check scenario 1')
     # MERGE SCENARIO 1
     # If root1 is in CP_D1, we should add an extra node between
     # the root and all other to CP_D1 nodes
@@ -423,7 +423,7 @@ def merge_node(tree, CP_D1, CP_D2, y_true):
         tree[0].add_descendant(CP_D2_node)
         return y_true
         
-    print('Check scenario 2')
+#    print('Check scenario 2')
     # MERGE SCENARIO 2
     # If there is one CP in CP_D1 that is the ancestor of all others in CP_D1,
     # we know we have a perfect match between this node and CP_D2 
@@ -432,17 +432,17 @@ def merge_node(tree, CP_D1, CP_D2, y_true):
             count = 0
             count2 = 0
             common = n.name
-            print('Common', common)
+#            print('Common', common)
             for c in n.walk():
                 if np.isin(c.name, CP_D1):
                     count += 1
                 count2 += 1
             if (count == len(CP_D1)) & (count == count2):
-                print('Scenario 2.1')
+#                print('Scenario 2.1')
                 ## We have a perfect match
                 pred_value = common
                 cluster_value = CP_D2
-                print('Old label', cluster_value, 'is now:', pred_value)
+                print('Perfect match: ', cluster_value, 'is now:', pred_value)
                 y_true[np.where(y_true == cluster_value)[0]] = pred_value
                 return y_true
             else:
@@ -454,17 +454,17 @@ def merge_node(tree, CP_D1, CP_D2, y_true):
                 ### and CD4+ reg and CD4+ naive.
                 ### Only if count == len(tomerge)
                 if count == len(CP_D1):
-                    print('Scenario 2.2')
-                    print('Old to merge:', CP_D1)
+#                    print('Scenario 2.2')
+#                    print('Old to merge:', CP_D1)
                     xx = np.where(CP_D1 != common)[0]
                     CP_D1 = CP_D1[xx]
-                    print('New to merge:', CP_D1)
+#                    print('New to merge:', CP_D1)
    
             break
     
     ## MERGE SCENARIO 3
     ## This is the classical merge
-    print('Check scenario 3')
+#    print('Check scenario 3')
     common = common_ancestor(CP_D1, tree)
     CP_D2_node = Node(CP_D2)
     
@@ -539,12 +539,12 @@ def common_ancestor(CP_D1, tree):
             ancestors = []
             a = n.ancestor
             while a != None:
-                print(a)
+#                print(a)
                 ancestors.append(a.name)
                 a = a.ancestor
             all_ancestors.append(ancestors)
     
-    print(all_ancestors)
+#    print(all_ancestors)
     common = all_ancestors[0]
     
     if len(all_ancestors) > 1: 
