@@ -13,7 +13,7 @@ In the datasets, the rows represent different cells and columns represent the ge
 import pandas as pd
 import numpy as np
 
-path = '/tudelft.net/staff-bulk/ewi/insy/DBL/lmichielsen/Thesis/interdataset/Finaldataset/'
+path = 'path_to_files/'
 
 data0 = 'Data_10Xv2.csv'
 labels0 = 'Labels_10Xv2.csv'
