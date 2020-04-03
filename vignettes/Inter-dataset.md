@@ -176,10 +176,6 @@ sns.heatmap(round(conf_lin,2).iloc[:,order], vmin = 0, vmax = 1, annot=True)
 ![png](output_10_1.png)
 
 
-Add something about the sessioninfo
-Mention all these loaded packages (which are basically all needed) in the readme?
-https://stackoverflow.com/questions/20703975/is-there-a-sessioninfo-equivalent-in-python
-
 ### Sessioninfo
 
 
