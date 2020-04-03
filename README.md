@@ -4,7 +4,7 @@ We present a hierarchical progressive learning method which automatically finds 
 
 To run the pipeline, Python 3.6 and the scipy and scikit-learn libraries need be installed.
 
-Below, a short explanation to use the pipeline can be found. 
+Below, a short explanation to use the pipeline can be found. The [inter-dataset vignette](vignettes/Inter-dataset.md) can be used to reproduce the inter-dataset experiment. 
 
 ### General usage
 If you have multiple labeled datasets, progressive learning can be used to match the labels of the datasets and train a classification tree on all datasets. In case of one labeled dataset, the classification tree can be trained on one dataset without progressive learning. In both cases, the function returns a trained classification tree. 
