@@ -15,11 +15,11 @@ import numpy as np
 
 path = 'path_to_files/'
 
-data0 = 'Data_10Xv2.csv'
-labels0 = 'Labels_10Xv2.csv'
+data0 = 'Data_EQTL.csv'
+labels0 = 'Labels_EQTL.csv'
 
-data1 = 'Data_EQTL.csv'
-labels1 = 'Labels_EQTL.csv'
+data1 = 'Data_10Xv2.csv'
+labels1 = 'Labels_10Xv2.csv'
 
 data2 = 'Data_FACS.csv'
 labels2 = 'Labels_FACS.csv'
@@ -53,51 +53,50 @@ tree = train_hierarchical_classifier(data, labels, classifier = 'svm',
 
     Iteration  1 
     
-    Perfect match:  B cell - eQTL is now: B cell - B-10Xv2
-    Perfect match:  CD4+ T cell - eQTL is now: CD4+ T cell - B-10Xv2
-    Perfect match:  CD8+ T cell - eQTL is now: CD8+ T cell - B-10Xv2
+    Perfect match:  B cell - B-10Xv2 is now: B cell - eQTL
+    Perfect match:  CD4+ T cell - B-10Xv2 is now: CD4+ T cell - eQTL
+    Perfect match:  CD8+ T cell - B-10Xv2 is now: CD8+ T cell - eQTL
     
     Updated tree:
     Root: Node("root")
-    B cell - B-10Xv2
-    CD4+ T cell - B-10Xv2
-    CD8+ T cell - B-10Xv2
-    Megakaryocyte - B-10Xv2
-    	 Megakaryocyte - eQTL
-    Monocyte - B-10Xv2
-    	 CD14+ Monocyte - eQTL
-    	 CD16+ Monocyte - eQTL
-    	 mDC - eQTL
-    NK cell - B-10Xv2
-    	 CD56+ bright NK cell - eQTL
-    	 CD56+ dim NK cell - eQTL
+    B cell - eQTL
+    CD4+ T cell - eQTL
+    CD8+ T cell - eQTL
     pDC - eQTL
-    
+    Monocyte - B-10Xv2
+       CD14+ Monocyte - eQTL
+       CD16+ Monocyte - eQTL
+       mDC - eQTL
+    NK cell - B-10Xv2
+       CD56+ bright NK cell - eQTL
+       CD56+ dim NK cell - eQTL
+    Megakaryocyte - B-10Xv2
+       Megakaryocyte - eQTL    
     
     Iteration  2 
     
-    Perfect match:  B cell - FACS is now: B cell - B-10Xv2
+    Perfect match:  B cell - FACS is now: B cell - eQTL
     
     Updated tree:
     Root: Node("root")
-    B cell - B-10Xv2
-    CD4+ T cell - B-10Xv2
-    	 CD4+/CD25 T Reg - FACS
-    	 CD4+/CD45RA+/CD25- Naive T - FACS
-    	 CD4+/CD45RO+ Memory - FACS
-    	 CD8+/CD45RA+ Naive Cytotoxic - FACS
-    Megakaryocyte - B-10Xv2
-    	 Megakaryocyte - eQTL
-    Monocyte - B-10Xv2
-    	 CD14+ Monocyte - eQTL
-    	 CD16+ Monocyte - eQTL
-    	 mDC - eQTL
+    B cell - eQTL
+    CD4+ T cell - eQTL
+       CD4+/CD25 T Reg - FACS
+       CD4+/CD45RA+/CD25- Naive T - FACS
+       CD4+/CD45RO+ Memory - FACS
+       CD8+/CD45RA+ Naive Cytotoxic - FACS
+    CD8+ T cell - eQTL
+       NK cell - FACS
     pDC - eQTL
-    NK cell - FACS
-    	 CD8+ T cell - B-10Xv2
-    	 NK cell - B-10Xv2
-    		 CD56+ bright NK cell - eQTL
-    		 CD56+ dim NK cell - eQTL
+    Monocyte - B-10Xv2
+       CD14+ Monocyte - eQTL
+       CD16+ Monocyte - eQTL
+       mDC - eQTL
+    NK cell - B-10Xv2
+       CD56+ bright NK cell - eQTL
+       CD56+ dim NK cell - eQTL
+    Megakaryocyte - B-10Xv2
+       Megakaryocyte - eQTL
     CD34+ cell - FACS
     
     
