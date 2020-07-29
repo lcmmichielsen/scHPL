@@ -7,6 +7,7 @@ Created on Wed Oct 23 14:16:59 2019
 import numpy as np
 import pandas as pd
 from newick import *
+from numpy import linalg as LA
 
 def predict_labels(testdata, tree):
     '''
@@ -22,15 +23,39 @@ def predict_labels(testdata, tree):
     ------
     Predicted labels
     '''
+    
+    useRE = False
+    
+    # First reject cells based on reconstruction error
+    if tree[0].get_RE() > 0:
+        useRE = True
+        
+        t = tree[0].get_RE()
+        
+        pca, pcs = tree[0].get_pca()
+        test_t = pca.transform(testdata)
+        test_rec = pca.inverse_transform(test_t)
+        
+        RE_error2 = LA.norm(testdata - test_rec, axis = 1)
+        rej_RE = RE_error2 > t
+        print("Cells rejected using RE: ", np.sum(rej_RE))
 
     # Do PCA if needed
+    dimred = False
     if tree[0].get_dimred():
         pca, pcs = tree[0].get_pca()
         testdata = pca.transform(testdata)
         testdata = pd.DataFrame(testdata)
+        dimred = True
     
     labels_all = []
     for idx, testpoint in enumerate(testdata.values):
+        
+        if useRE:   
+            if rej_RE[idx]:
+                labels_all.append(tree[0].name)
+                continue
+        
         testpoint = testpoint.reshape(1,-1)
         
         labels = []
@@ -47,7 +72,7 @@ def predict_labels(testdata, tree):
             
             # Predict if the cell belongs to one of the descendants
             for n in parentnode.descendants:
-                label, score = predict_node(testpoint, n)
+                label, score = predict_node(testpoint, n, dimred)
                 
                 if (label == 1) & (score > max_score):
                     best_child = n
@@ -67,7 +92,7 @@ def predict_labels(testdata, tree):
         
     return np.asarray(labels_all)
         
-def predict_node(testpoint, n):
+def predict_node(testpoint, n, dimred):
     '''
     Use the local classifier of a node to predict the label of a cell
     
@@ -84,7 +109,7 @@ def predict_node(testpoint, n):
     '''
     
     testpoint_transformed = testpoint
-    if n.get_dimred():
+    if dimred:
         pca, pcs = n.get_pca()
         testpoint_transformed = testpoint_transformed[:,pcs]
     

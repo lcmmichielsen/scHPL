@@ -7,6 +7,7 @@ Created on Fri Nov  1 16:48:26 2019
 
 import numpy as np
 from newick import *
+import pandas as pd
 
 def hierarchical_F1(true_labels, pred_labels, tree):
     '''
@@ -78,3 +79,26 @@ def hierarchical_F1(true_labels, pred_labels, tree):
     
     
     return hF1
+
+
+def confusion(y_true, y_pred):
+    '''
+    Construct a confusion matrix
+    '''
+    
+    # Construct normalized confusion matrix
+    num_cluster = len(np.unique(y_true))
+    num_pred = len(np.unique(y_pred))
+    NC = np.zeros([num_cluster,num_pred], dtype = int)
+
+    for i, group_true in enumerate(np.unique(y_true)):
+        a = y_true == group_true
+        a = np.squeeze(a)
+        for j, group_pred in enumerate(np.unique(y_pred)):
+            b = y_pred == group_pred
+            b = np.squeeze(b)
+            NC[i,j] = sum(a & b)
+
+    NC = pd.DataFrame(NC, columns = np.unique(y_pred), index = np.unique(y_true))
+    
+    return NC

@@ -13,9 +13,12 @@ from scipy.stats import ttest_ind
 from newick import *
 from sklearn.utils._testing import ignore_warnings
 from sklearn.exceptions import ConvergenceWarning
+from numpy import linalg as LA
+from sklearn.model_selection import StratifiedKFold
+
 
 @ignore_warnings(category=ConvergenceWarning)
-def train_tree(data, labels, tree, classifier = 'svm_occ', dimred = True):
+def train_tree(data, labels, tree, classifier = 'svm_occ', dimred = True, useRE = True, FN = 1):
     '''
     Train the hierarchical classifier. 
     
@@ -26,6 +29,8 @@ def train_tree(data, labels, tree, classifier = 'svm_occ', dimred = True):
     tree: classification tree (build for the training data using newick.py)
     classifier: which classifier to use ('svm' or 'svm_occ')
     dimred: if dimensionality reduction should be applied
+    useRE: if cells should be could be rejected using the reconstruction error
+    FN: percentage of FN allowed
     
     Return
     ------
@@ -34,10 +39,45 @@ def train_tree(data, labels, tree, classifier = 'svm_occ', dimred = True):
     
     numgenes = np.shape(data)[1]
     
-    if(dimred == True):
-        pca = PCA(n_components = 0.9)
+    if(useRE == True):
+        ## First determine the threshold
+        
+        perc = 100-(FN)
+        
+        sss = StratifiedKFold(n_splits = 5, shuffle = True, random_state = 0)
+        sss.get_n_splits(data, labels)
+        
+        RE = []
+        
+        for trainindex, testindex in sss.split(data, labels):
+                
+            train = data.iloc[trainindex]
+            test = data.iloc[testindex]
+            
+            pca = PCA(n_components = 100, random_state = 0)
+            pca.fit(train)
+            
+            test_t = pca.transform(test)
+            test_rec = pca.inverse_transform(test_t)
+        
+            RE_error2 = LA.norm(test - test_rec, axis = 1)
+                    
+            RE.append(np.percentile(RE_error2,perc))
+        
+        pca = PCA(n_components = 100, random_state = 0)
         pca.fit(data)
         tree[0].set_pca(pca, None) #Save PCA transformation to the root node, so we can apply it to a test set
+                        
+        tree[0].set_RE(np.median(RE))
+
+    if(dimred == True):
+        if(useRE == False):
+            pca = PCA(n_components = 100, random_state = 0)
+            pca.fit(data)
+            tree[0].set_pca(pca, None) #Save PCA transformation to the root node, so we can apply it to a test set
+        
+        tree[0].set_dimred(True)
+        
         data = pca.transform(data)
         data = pd.DataFrame(data)
     

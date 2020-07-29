@@ -52,6 +52,7 @@ class Node(object):
         self.dimred = False
         self.pca = None
         self.explainingpc = None
+        self.maxRE = 0 #the highest reconstruction error on the training data
 
     def __repr__(self):
         return 'Node("%s")' % self.name
@@ -379,9 +380,13 @@ class Node(object):
     
     def set_pca(self, pca, explainingpc):
         self.pca = copy.deepcopy(pca)
-        self.set_dimred(True)
         self.explainingpc = copy.deepcopy(explainingpc)
-
+        
+    def set_RE(self, maxRE):
+        self.maxRE = maxRE
+        
+    def get_RE(self):
+        return self.maxRE
 
 def loads(s, strip_comments=False, **kw):
     """

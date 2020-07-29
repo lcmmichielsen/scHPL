@@ -12,7 +12,7 @@ from build_classifier import *
 from predict_labels import *
 from update_tree import *
 
-def train_hierarchical_classifier(data, labels, classifier = 'svm_occ', dimred = True, threshold = 0.25):
+def train_hierarchical_classifier(data, labels, classifier = 'svm_occ', dimred = True, useRE = True, FN = 1, threshold = 0.25):
     '''
     Apply the hierarchical progressive learning pipeline 
     
@@ -23,6 +23,8 @@ def train_hierarchical_classifier(data, labels, classifier = 'svm_occ', dimred =
     labels: the labels of each dataset
     classifier: the classifier to use, either ('svm' or 'svm_occ')
     dimred: whether to apply dimensionality reduction or not
+    useRE: if cells should be could be rejected using the reconstruction error
+    FN: percentage of FN allowed
     threshold: threshold to use during the matching of the labels
     
     Return
@@ -48,8 +50,8 @@ def train_hierarchical_classifier(data, labels, classifier = 'svm_occ', dimred =
         tree_2 = construct_tree(tree_2, labels_2)
         
         # Train the trees
-        tree_c = train_tree(data_c, labels_c, tree_c, classifier, dimred)
-        tree_2 = train_tree(data_2, labels_2, tree_2, classifier, dimred)
+        tree_c = train_tree(data_c, labels_c, tree_c, classifier, dimred, useRE, FN)
+        tree_2 = train_tree(data_2, labels_2, tree_2, classifier, dimred, useRE, FN)
 
         # Predict labels other dataset
         labels_2_pred = predict_labels(data_2, tree_c)
@@ -83,7 +85,7 @@ def train_hierarchical_classifier(data, labels, classifier = 'svm_occ', dimred =
     
     
     # Train the final tree
-    tree_c = train_tree(data_c, labels_c, tree_c, classifier, dimred)
+    tree_c = train_tree(data_c, labels_c, tree_c, classifier, dimred, useRE, FN)
     
     
     return tree_c
