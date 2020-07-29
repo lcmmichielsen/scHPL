@@ -172,7 +172,7 @@ sns.heatmap(round(conf_lin,2).iloc[:,order], vmin = 0, vmax = 1, annot=True)
 
 
 
-![png](output_10_1.png)
+![png](confusion_linear.png)
 
 
 ### Sessioninfo
