@@ -10,7 +10,7 @@ scHPL requires Python 3.6 or 3.7. The easiest way to install scHPL is through th
 
 ### General usage
 
-The ```tutorial.ipynb``` notebook explains the basics of scHPL. The [vignette folder](vignettes) contains notebooks to reproduce the experiments.  
+The ```tutorial.ipynb``` notebook explains the basics of scHPL. The [vignette folder](vignettes) contains notebooks to reproduce the inter-dataset experiments.  
 
 ### Datasets
 
