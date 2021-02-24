@@ -17,4 +17,4 @@ The ```tutorial.ipynb``` notebook explains the basics of scHPL. The [vignette fo
 All datasets used are publicly available data and can be downloaded from Zenodo. The simulated data and aligned datasets used during the interdataset experiments can be downloaded from the scHPL Zenodo (https://doi.org/10.5281/zenodo.4557712). The filtered PBMC-FACS and AMB2018 dataset can be downloaded from the scRNA-seq benchmark Zenodo (https://doi.org/10.5281/zenodo.3357167)
 
 For citation and further information please refer to:
-"Hierarchical progressive learning of cell identities in single-cell data", [biorxiv](https://www.biorxiv.org/content/10.1101/2020.03.27.010124v2)
+"Hierarchical progressive learning of cell identities in single-cell data" ([biorxiv](https://www.biorxiv.org/content/10.1101/2020.03.27.010124v2))
