@@ -156,6 +156,75 @@ def _parse_siblings(s, **kw):
             current.append(c)
 
 
+def rename_node(old_name, new_name, tree):
+    '''
+    Function to rename a node in the tree manually.
+    
+    Parameters:
+    ----------
+    old_name: old name of the node
+    new_name: new_name of the node
+    tree: tree containing the node
+    
+    Return:
+    -------
+    tree: updated tree
+    '''
+    
+    for n in tree[0].walk(mode = 'postorder'):
+        if(n.name == old_name):
+            n.name = new_name
+            return tree
+    
+    print('Node not found, node could not be renamed.')
+    
+    return tree
+
+def remove_node(name, tree, children = True):
+    '''
+    
+
+    Parameters
+    ----------
+    name: name of the node to remove
+    tree : tree containing this node
+    children : if True: children are also removed, if False: children are
+    rewired to parent node 
+    
+    Returns
+    -------
+    tree: updated tree
+
+    '''
+    
+   
+    if name == 'root':
+        print('Root cannot be removed from the tree.')
+        return tree
+    else:
+        for n in tree[0].walk(mode = 'postorder'):
+            if(n.name == name):
+                parentnode = n.ancestor
+                
+                if children == False:
+                    for c in n.descendants:
+                        parentnode.add_descendant(c)
+                        c.ancestor = parentnode
+                
+                old_descendants = parentnode.descendants
+                #remove children from the previous parent
+                parentnode.descendants = []
+                for j in old_descendants:
+                    if j.name != name:
+                        parentnode.add_descendant(j)
+                return tree
+    
+    print('Node not found, node could not be deleted.')
+    
+    
+    
+    return tree
+
 def add_node(name, tree, parent, children = None):
     '''
     Function to add a node to the tree manually.
