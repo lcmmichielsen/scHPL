@@ -51,9 +51,10 @@ def update_tree(y_true1, y_pred1, y_true2, y_pred2, threshold, tree, return_miss
     y_true2, pop2 = _match_trees(X, tree, y_true2, pop2)
             
     idx_missing = np.where(pop2.iloc[:,0] == 0)[0]
+    missing_populations = []
     
     if len(idx_missing) > 0:
-        missing_populations = pop2.index[idx_missing]
+        missing_populations = pop2.index[idx_missing].values
         
         print('These populations are missing from the tree: ')
         print(missing_populations)
@@ -66,7 +67,7 @@ def update_tree(y_true1, y_pred1, y_true2, y_pred2, threshold, tree, return_miss
                 newnode = TreeNode(p)
                 tree[0].add_descendant(newnode)
 
-    return tree, y_true2
+    return tree, y_true2, missing_populations
 
 
 def _confusion_binary(y_true, y_pred, threshold, file_name):

@@ -6,7 +6,6 @@ Created on Wed Oct 23 14:16:59 2019
 """
 import numpy as np
 from numpy import linalg as LA
-import pandas as pd
 from .utils import TreeNode
 
 def predict_labels(testdata, tree):
@@ -36,18 +35,16 @@ def predict_labels(testdata, tree):
         
         RE_error2 = LA.norm(testdata - test_rec, axis = 1)
         rej_RE = RE_error2 > t
-        # print("Cells rejected using RE: ", np.sum(rej_RE))
 
     # Do PCA if needed
     dimred = False
     if tree[0].get_dimred():
         pca, pcs = tree[0].get_pca()
         testdata = pca.transform(testdata)
-        testdata = pd.DataFrame(testdata)
         dimred = True
     
     labels_all = []
-    for idx, testpoint in enumerate(testdata.values):
+    for idx, testpoint in enumerate(testdata):
         
         if useRE:   
             if rej_RE[idx]:

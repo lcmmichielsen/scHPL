@@ -7,7 +7,6 @@ Created on Wed Oct 23 11:37:16 2019
 
 import numpy as np
 from numpy import linalg as LA
-import pandas as pd
 from sklearn import svm
 from sklearn.decomposition import PCA
 from sklearn.utils._testing import ignore_warnings
@@ -54,8 +53,8 @@ def train_tree(data, labels, tree, classifier = 'svm_occ', dimred = True, useRE 
         
         for trainindex, testindex in sss.split(data, labels):
                 
-            train = data.iloc[trainindex]
-            test = data.iloc[testindex]
+            train = data[trainindex]
+            test = data[testindex]
             
             pca = PCA(n_components = num_components, random_state = 0)
             pca.fit(train)
@@ -82,7 +81,6 @@ def train_tree(data, labels, tree, classifier = 'svm_occ', dimred = True, useRE 
         tree[0].set_dimred(True)
         
         data = pca.transform(data)
-        data = pd.DataFrame(data)
     
     #recursively train the classifiers for each node in the tree
     for n in tree[0].descendants:
@@ -141,11 +139,11 @@ def _find_pcs(data, labels, group, n, numgenes):
     
     # positive samples
     this_class = np.where(group == 1)[0]
-    this_data = data.iloc[this_class]
+    this_data = data[this_class]
     
     # negative samples
     other_class = np.where(group == 2)[0]
-    other_data = data.iloc[other_class]
+    other_data = data[other_class]
     
     statistic, pvalue = ttest_ind(this_data, other_data, equal_var = False)
 
@@ -155,9 +153,7 @@ def _find_pcs(data, labels, group, n, numgenes):
     if len(explaining_pcs) == 0:
         explaining_pcs = np.argsort(pvalue)[:5]
             
-    # print(n.name, ': ', len(explaining_pcs))
-
-    data = data.iloc[:,explaining_pcs]
+    data = data[:,explaining_pcs]
     
     # Save the explaining pcs in the tree
     n.set_pca(None, explaining_pcs)
@@ -180,10 +176,11 @@ def _train_svm(data, labels, group, n):
     # group == 2 --> negative samples
     group = _find_negativesamples(labels, group, n) 
     idx_svm = np.where((group == 1) | (group == 2))[0]
-    data_svm = data.iloc[idx_svm]
+    data_svm = data[idx_svm]
     group_svm = group[idx_svm]
-    
+        
     clf = svm.LinearSVC(random_state=1).fit(data_svm, group_svm)
+    
     n.set_classifier(clf) #save classifier to the node
     
         
@@ -199,7 +196,7 @@ def _train_occ(data, labels, group, n):
     n: node
     '''
     
-    data_group = data.iloc[np.where(group == 1)[0]]
+    data_group = data[np.where(group == 1)[0]]
     
     clf = svm.OneClassSVM(gamma = 'scale', nu = 0.05).fit(data_group)
     n.set_classifier(clf) #save classifier to the node
