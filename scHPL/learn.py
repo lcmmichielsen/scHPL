@@ -90,9 +90,12 @@ def learn_tree(data: anndata,
     labels_1 = labels[idx_1]
     data_1 = xx[idx_1]
     
+    print('Starting tree:')
+    print_tree(tree)
+    
     for b in batch_order:
         
-        print('Adding dataset', str(b), 'to the tree')
+        print('\nAdding dataset', str(b), 'to the tree')
         
         idx_2 = np.where(batches == b)[0]
         data_2 = xx[idx_2]
@@ -121,7 +124,7 @@ def learn_tree(data: anndata,
                                            return_missing = return_missing)
         missing_pop.extend(mis_pop)
         
-        print('Updated tree:')
+        print('\nUpdated tree:')
         print_tree(tree)
         
         #concatenate the two datasets

@@ -151,7 +151,7 @@ def _match_trees(X, tree, y_true, pop2):
     # scan binary matrix
     binary, y_true, pop2 = _scan_binary(binary, name_root1, name_root2, y_true, tree, pop2)
 
-    strict.iloc[binary.values == False] = False
+    strict.values[binary.values == False] = False
     
     # scan strict matrix if needed
     if (np.any(strict)):
