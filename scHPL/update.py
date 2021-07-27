@@ -342,7 +342,7 @@ def _find_scenario(i, j, idx, jdx, rowsum, colsum, binary, name_root1, name_root
         # Check if the difficult node is a leaf node
         CP_D1_difficult = binary.columns.values[idx]
         
-        if np.isin(CP_D1_difficult, tree[0].get_leaf_names()) == False:
+        if np.isin(CP_D1_difficult, tree[0].get_leaf_names_first()) == False:
             
             # Check is CP_D1_difficult is the common ancestor of the rest of CP_D1
             count = 0
@@ -398,7 +398,7 @@ def _perfect_match(old_name, match_name, pop2, tree):
     
     print('Perfect match between: ', old_name, ', and:', match_name)
 
-    for dn in tree.walk():
+    for dn in tree[0].walk():
         if(dn.name[0] == match_name):
             match_node = dn
     

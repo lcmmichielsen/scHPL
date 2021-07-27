@@ -178,7 +178,7 @@ def _train_svm(data, labels, group, n):
     idx_svm = np.where((group == 1) | (group == 2))[0]
     data_svm = data[idx_svm]
     group_svm = group[idx_svm]
-        
+    
     clf = svm.LinearSVC(random_state=1).fit(data_svm, group_svm)
     
     n.set_classifier(clf) #save classifier to the node

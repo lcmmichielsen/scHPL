@@ -3,6 +3,8 @@ import pathlib
 import copy
 import numpy as np
 from newick import Node
+import matplotlib.pyplot as plt
+import matplotlib.lines as mlines
 
 COMMENT = re.compile(r'\[[^\]]*\]')
 
@@ -181,8 +183,8 @@ def rename_node(old_name, new_name, tree):
     '''
     
     for n in tree[0].walk(mode = 'postorder'):
-        if(n.name == old_name):
-            n.name = new_name
+        if(np.isin(old_name, n.name)):
+            n.name = [new_name]
             return tree
     
     print('Node not found, node could not be renamed.')
@@ -224,7 +226,7 @@ def remove_node(name, tree, children = True):
                 #remove children from the previous parent
                 parentnode.descendants = []
                 for j in old_descendants:
-                    if np.isin(name, j.name):
+                    if np.isin(name, j.name, invert=True):
                         parentnode.add_descendant(j)
                 return tree
     
@@ -313,14 +315,66 @@ def print_tree(tree):
 
     '''
     
-    _print_node(tree[0])
+    global ver
+    ver = 0.93
+    
+    count = _count_nodes(tree)
+    ver_steps = 0.9/count
+    plot_height = count*0.3
+    print(plot_height)
+    fig = plt.figure(figsize=(6,plot_height))
+        
+    _print_node(tree[0], hor=0.05, ver_steps=ver_steps, fig=fig)
+        
+    plt.show()
     
 
-def _print_node(node, indent = ''):
-    
-    print(indent + node.name)
-    indent = indent + '\t'
+def _print_node(node, hor, ver_steps, fig):
+    global ver
+#     hor2 = hor
+    txt = node.name[0]
+    for n in node.name:
+        if(n != txt):
+            txt = txt + ' & ' + n
+        
+    # Add horizontal line
+    x, y = ([np.max([0.05, hor-0.045]), hor], [ver, ver])
+    line = mlines.Line2D(x,y, lw=1)
+    fig.add_artist(line)
 
+    # Add textbox
+    fig.text(hor,ver, txt, size=10,
+             ha = 'left', va='center',
+             bbox = dict(boxstyle='round', fc='w', ec='k'))
+
+    hor = hor+0.05
+    
+    ver_line_start = ver
+    ver_line_end = ver
+    
     for i in node.descendants:
-        _print_node(i, indent)
+        ver = ver-ver_steps
+        ver_line_end = ver
+        _print_node(i, hor, ver_steps, fig)
+        
+    # Add vertical line
+    x, y = ([np.max([0.05, hor-0.045]), np.max([0.05, hor-0.045])], 
+            [ver_line_start, ver_line_end])
+    line = mlines.Line2D(x,y, lw=1)
+    fig.add_artist(line)
+        
+def _count_nodes(tree):
+    
+    count = 0
+    for n in tree[0].walk():
+        count=count+1
+        
+    return count
+
+
+    
+
+    
+
+
     
