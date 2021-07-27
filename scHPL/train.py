@@ -111,10 +111,10 @@ def _train_node(data, labels, n, classifier, dimred, numgenes):
     group = np.zeros(len(labels), dtype = int)
 
     if n.is_leaf:
-        group[np.where(labels == n.name)[0]] = 1
+        group[np.isin(labels, n.name)] = 1
     else:
         if n.name != None:
-            group[np.where(labels == n.name)[0]] = 1
+            group[np.isin(labels, n.name)] = 1
         for j in n.descendants:
             group_new = _train_node(data, labels, j, classifier, dimred, numgenes)
             group[np.where(group_new == 1)[0]] = 1
@@ -211,11 +211,11 @@ def _find_negativesamples(labels, group, n):
     for i in a.descendants:
         if(i.name != n.name):
             for j in i.walk():
-                group[np.where(labels == j.name)[0]] = 2
+                group[np.isin(labels, j.name)] = 2
                 
     # If we find no sisters, we compare with the other samples of its ancestor
     if(len(np.where(group == 2)[0])) == 0:
-        group[np.where(labels == a.name)[0]] = 2
+        group[np.isin(labels, a.name)] = 2
 
     return group
 

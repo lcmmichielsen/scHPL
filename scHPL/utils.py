@@ -35,6 +35,15 @@ class TreeNode(Node):
         for descendant in descendants or []:
             node.add_descendant(descendant)
         return node
+    
+    def get_leaf_names_first(self):
+        """
+        Get the names of all the leaf nodes of the subtree descending from
+        this node.
+        :return: List of names of Nodes with no descendants.
+        """
+        return [n.name[0] for n in self.get_leaves()]
+
 
     
     def set_classifier(self, classifier):
@@ -128,7 +137,7 @@ def _parse_node(s, strip_comments=False, **kw):
         descendants = list(_parse_siblings(')'.join(parts[:-1])[1:], **kw))
         label = parts[-1]
     name, length = _parse_name_and_length(label)
-    return TreeNode.create(name=name, descendants=descendants, **kw)
+    return TreeNode.create(name=[name], descendants=descendants, **kw)
 
 def _parse_name_and_length(s):
     length = None
@@ -154,7 +163,7 @@ def _parse_siblings(s, **kw):
             elif c == ")":
                 bracket_level -= 1
             current.append(c)
-
+            
 
 def rename_node(old_name, new_name, tree):
     '''
@@ -203,7 +212,7 @@ def remove_node(name, tree, children = True):
         return tree
     else:
         for n in tree[0].walk(mode = 'postorder'):
-            if(n.name == name):
+            if(np.isin(name, n.name)):
                 parentnode = n.ancestor
                 
                 if children == False:
@@ -215,7 +224,7 @@ def remove_node(name, tree, children = True):
                 #remove children from the previous parent
                 parentnode.descendants = []
                 for j in old_descendants:
-                    if j.name != name:
+                    if np.isin(name, j.name):
                         parentnode.add_descendant(j)
                 return tree
     
@@ -243,7 +252,7 @@ def add_node(name, tree, parent, children = None):
     tree: updated tree
     '''
     
-    newnode = TreeNode(name)
+    newnode = TreeNode([name])
     
     if parent == 'root':
         tree[0].add_descendant(newnode)
@@ -252,7 +261,7 @@ def add_node(name, tree, parent, children = None):
         return tree
     else:
         for n in tree[0].walk(mode = 'postorder'):
-            if(n.name == parent):
+            if(np.isin(parent, n.name)):
                 n.add_descendant(newnode)
                 if children != None: 
                     _rewire_children(newnode, n, children)
@@ -276,7 +285,7 @@ def _rewire_children(newnode, parentnode, children):
     
     #add children to the newnode
     for i in parentnode.descendants:
-        if np.isin(i.name, children):
+        if np.isin(i.name, children).any():
             i.ancestor = newnode 
             newnode.add_descendant(i) 
 
@@ -285,7 +294,7 @@ def _rewire_children(newnode, parentnode, children):
     olddescendants = parentnode.descendants
     parentnode.descendants = []
     for j in olddescendants:
-        if np.isin(j.name, children) == False:
+        if np.isin(j.name, children).any() == False:
             parentnode.add_descendant(j)
     
     return 

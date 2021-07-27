@@ -116,7 +116,7 @@ def learn_tree(data: anndata,
         labels_1_pred = predict_labels(data_1, tree_2)
         
         # Update first tree and labels second dataset
-        tree, labels_2_new, mis_pop = update_tree(labels_1.reshape(-1,1), 
+        tree, mis_pop = update_tree(labels_1.reshape(-1,1), 
                                            labels_1_pred.reshape(-1,1),
                                            labels_2.reshape(-1,1),
                                            labels_2_pred.reshape(-1,1),
@@ -129,7 +129,7 @@ def learn_tree(data: anndata,
         
         #concatenate the two datasets
         data_1 = np.concatenate((data_1, data_2), axis = 0)
-        labels_1 = np.concatenate((np.squeeze(labels_1), np.squeeze(labels_2_new)), 
+        labels_1 = np.concatenate((np.squeeze(labels_1), np.squeeze(labels_2)), 
                                 axis = 0)
             
     
@@ -153,7 +153,7 @@ def _construct_tree(tree, labels):
     unique_labels = np.unique(labels)
     
     for ul in unique_labels:
-        newnode = TreeNode(ul)
+        newnode = TreeNode([ul])
         tree[0].add_descendant(newnode)
         
     return tree

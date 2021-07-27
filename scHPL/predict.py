@@ -48,7 +48,7 @@ def predict_labels(testdata, tree):
         
         if useRE:   
             if rej_RE[idx]:
-                labels_all.append(tree[0].name)
+                labels_all.append(tree[0].name[0])
                 continue
         
         testpoint = testpoint.reshape(1,-1)
@@ -56,7 +56,7 @@ def predict_labels(testdata, tree):
         labels = []
         scores = []
         parentnode = tree[0]
-        labels.append(tree[0].name)
+        labels.append(tree[0].name[0])
         scores.append(-1)
         
         # continue until a leaf node is reached
@@ -77,7 +77,7 @@ def predict_labels(testdata, tree):
             if(best_child != None):
                 parentnode = best_child
                 scores.append(max_score)
-                labels.append(best_child.name)
+                labels.append(best_child.name[0])
             # Else, stop
             else:
                 break
