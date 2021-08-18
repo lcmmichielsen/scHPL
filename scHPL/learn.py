@@ -21,8 +21,8 @@ def learn_tree(data: anndata,
                tree: TreeNode = None,
                retrain: bool = False,
                batch_added: list = None,
-               classifier: str = 'svm_occ',
-               dimred: bool = True,
+               classifier: str = 'svm',
+               dimred: bool = False,
                useRE: bool = True,
                FN: float = 1,
                threshold: float = 0.25,
@@ -50,9 +50,9 @@ def learn_tree(data: anndata,
         datasets are changed after intial construction).
     batch_added: List = None
         Indicates which batches were used to build the existing tree.
-    classifier: String = 'svm_occ'
+    classifier: String = 'svm'
         Classifier to use (either 'svm' or 'svm_occ').
-    dimred: Boolean = True
+    dimred: Boolean = False
         If 'True' PCA is applied before training the classifier.
     useRE: Boolean = True
         If 'True', cells are also rejected based on the reconstruction error.

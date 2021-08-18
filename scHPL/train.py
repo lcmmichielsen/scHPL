@@ -16,7 +16,7 @@ from scipy.stats import ttest_ind
 from .utils import TreeNode
 
 @ignore_warnings(category=ConvergenceWarning)
-def train_tree(data, labels, tree, classifier = 'svm_occ', dimred = True, useRE = True, FN = 1):
+def train_tree(data, labels, tree, classifier = 'svm', dimred = False, useRE = True, FN = 1):
     '''
     Train the hierarchical classifier. 
     
