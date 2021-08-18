@@ -125,7 +125,7 @@ def learn_tree(data: anndata,
         missing_pop.extend(mis_pop)
         
         print('\nUpdated tree:')
-        print_tree(tree)
+        print_tree(tree, np.unique(labels_2))
         
         #concatenate the two datasets
         data_1 = np.concatenate((data_1, data_2), axis = 0)
