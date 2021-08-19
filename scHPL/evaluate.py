@@ -7,6 +7,9 @@ Created on Fri Nov  1 16:48:26 2019
 
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
 from .utils import TreeNode
 
 def hierarchical_F1(true_labels, pred_labels, tree):
@@ -95,18 +98,50 @@ def confusion_matrix(true_labels, pred_labels):
     conf: confusion matrix
     '''
     
-    num_cluster = len(np.unique(true_labels))
-    num_pred = len(np.unique(pred_labels))
-    conf = np.zeros([num_cluster,num_pred], dtype = int)
+    yall = pd.concat([true_labels, pred_labels], axis=1)
+    yall.columns = ['ytrue', 'ypred']
+    conf = pd.crosstab(yall['ytrue'], yall['ypred'])
 
-    for i, group_true in enumerate(np.unique(true_labels)):
-        a = true_labels == group_true
-        a = np.squeeze(a)
-        for j, group_pred in enumerate(np.unique(pred_labels)):
-            b = pred_labels == group_pred
-            b = np.squeeze(b)
-            conf[i,j] = sum(a & b)
-
-    conf = pd.DataFrame(conf, columns = np.unique(pred_labels), index = np.unique(true_labels))
-    
     return conf
+
+def heatmap(true_labels, pred_labels, order_rows = None, order_cols = None, 
+            transpose = False, cmap = 'Reds', title = None, annot=False,
+            xlabel = 'Predicted labels', ylabel = 'True labels', 
+            shape = (10,10), **kwargs):
+
+    #Get confusion matrix & normalize
+    conf = confusion_matrix(true_labels, pred_labels) 
+
+    if transpose:
+        conf = np.transpose(conf)
+
+    conf2 = np.divide(conf,np.sum(conf.values, axis = 1, keepdims=True))   
+
+    if order_rows is None:
+        num_rows = np.shape(conf2)[0]
+        order_rows = np.linspace(0, num_rows-1, num=num_rows, dtype=int)
+    
+    if order_cols is None:
+        num_cols = np.shape(conf2)[1]
+        order_cols = np.linspace(0, num_cols-1, num=num_cols, dtype=int)
+    
+    plt.figure(figsize=shape)
+    if annot:
+        sns.heatmap(conf2.iloc[order_rows,order_cols], vmin = 0, vmax = 1, 
+                cbar_kws={'label': 'Fraction'}, cmap=cmap, 
+                annot=conf.iloc[order_rows, order_cols], **kwargs)
+    else:
+        sns.heatmap(conf2.iloc[order_rows,order_cols], vmin = 0, vmax = 1, 
+                cbar_kws={'label': 'Fraction'}, cmap=cmap, **kwargs)
+    
+    if title is not None:
+        plt.title(title)
+        
+    if xlabel is not None:
+        plt.xlabel(xlabel, fontsize = 14)
+    
+    if ylabel is not None:
+        plt.ylabel(ylabel, fontsize = 14)
+    
+    plt.show()
+    
