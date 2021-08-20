@@ -98,6 +98,8 @@ def confusion_matrix(true_labels, pred_labels):
     conf: confusion matrix
     '''
     
+    true_labels = pd.DataFrame(true_labels).reset_index(drop=True)
+    pred_labels = pd.DataFrame(pred_labels).reset_index(drop=True)
     yall = pd.concat([true_labels, pred_labels], axis=1)
     yall.columns = ['ytrue', 'ypred']
     conf = pd.crosstab(yall['ytrue'], yall['ypred'])
