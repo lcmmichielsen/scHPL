@@ -81,8 +81,8 @@ def _confusion_binary(y_true, y_pred, threshold, file_name):
     conf = confusion_matrix(y_true, y_pred)
     NC = np.divide(conf,np.sum(conf.values, axis = 1, keepdims=True))
 
-    print('Normalized CM')
-    print(NC)
+    #print('Normalized CM')
+    #print(NC)
 
     # Convert normalized confusion matrix to binary confusion matrix
     BC = NC > 1
