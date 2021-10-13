@@ -8,6 +8,7 @@ Created on Wed Oct 23 11:37:16 2019
 import numpy as np
 from numpy import linalg as LA
 from sklearn import svm
+from sklearn.neighbors import KNeighborsClassifier as KNN
 from sklearn.decomposition import PCA
 from sklearn.utils._testing import ignore_warnings
 from sklearn.exceptions import ConvergenceWarning
@@ -124,6 +125,8 @@ def _train_node(data, labels, n, classifier, dimred, numgenes):
     
     if(classifier == 'svm'):
         _train_svm(data, labels, group, n)
+    elif(classifier == 'knn'):
+        _train_knn(data, labels, group, n)
     else:
         _train_occ(data, labels, group, n)
         
@@ -183,6 +186,17 @@ def _train_svm(data, labels, group, n):
     
     n.set_classifier(clf) #save classifier to the node
     
+
+def _train_knn(data, labels, group, n):
+    group = _find_negativesamples(labels, group, n) 
+    idx_svm = np.where((group == 1) | (group == 2))[0]
+    data_svm = data[idx_svm]
+    group_svm = group[idx_svm]
+    
+    clf = KNN().fit(data_svm, group_svm)
+    
+    n.set_classifier(clf) #save classifier to the node
+
         
 
 def _train_occ(data, labels, group, n):

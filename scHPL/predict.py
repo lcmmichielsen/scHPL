@@ -110,7 +110,11 @@ def _predict_node(testpoint, n, dimred):
     
     clf = n.get_classifier()
     label = clf.predict(testpoint_transformed)
-    score = clf.decision_function(testpoint_transformed)
+    try:
+        score = clf.decision_function(testpoint_transformed)
+    except:
+        score = clf.predict_proba(testpoint_transformed)
+        score = np.max(score)
         
     return label, score
 

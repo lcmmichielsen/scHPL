@@ -83,6 +83,7 @@ def _confusion_binary(y_true, y_pred, threshold, file_name):
 
     #print('Normalized CM')
     #print(NC)
+    #pd.DataFrame(NC).to_csv('NC' + file_name + '.csv')
 
     # Convert normalized confusion matrix to binary confusion matrix
     BC = NC > 1
