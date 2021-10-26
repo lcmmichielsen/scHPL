@@ -160,6 +160,7 @@ def _train_parentnode(data, labels, n):
 
     if n.is_leaf:
         group[np.squeeze(np.isin(labels, n.name))] = 1
+        labels[np.squeeze(np.isin(labels, n.name))] = n.name[0]
         return group, labels
     else:
         for j in n.descendants:
@@ -238,7 +239,9 @@ def _train_knn(data, labels, group, n):
     idx_knn = np.where(group == 1)[0]
     data_knn = data[idx_knn]
     labels_knn = np.squeeze(labels[idx_knn])
-        
+    
+    # print(np.unique(labels_knn))
+    
     clf = KNN(weights='distance', 
               n_neighbors=50,
               metric='euclidean').fit(data_knn, labels_knn)

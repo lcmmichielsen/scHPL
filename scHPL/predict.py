@@ -80,7 +80,7 @@ def predict_labels(testdata, tree, threshold = 0.5):
                     labels.append(label[0])
                     oldparent = parentnode
                     for n in parentnode.descendants:
-                        if n.name == label:
+                        if n.name[0] == label:
                             parentnode = n
                     if parentnode.name == oldparent.name:
                         break
