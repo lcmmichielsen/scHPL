@@ -22,6 +22,7 @@ class TreeNode(Node):
         self.pca = None
         self.explainingpc = None
         self.maxRE = 0 #the highest reconstruction error on the training data
+        self.maxDist = 0
 
     @classmethod
     def create(cls, name=None, descendants=None, **kw):
@@ -75,6 +76,12 @@ class TreeNode(Node):
         
     def get_RE(self):
         return self.maxRE
+    
+    def set_maxDist(self, maxDist):
+        self.maxDist = maxDist
+        
+    def get_maxDist(self):
+        return self.maxDist
 
 def read_tree(fname, encoding='utf8', strip_comments=False, **kw):
     """

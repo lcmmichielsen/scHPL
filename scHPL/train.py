@@ -15,6 +15,8 @@ from sklearn.exceptions import ConvergenceWarning
 from sklearn.model_selection import StratifiedKFold
 from scipy.stats import ttest_ind
 from .utils import TreeNode
+# from utils import TreeNode
+import copy as cp
 
 @ignore_warnings(category=ConvergenceWarning)
 def train_tree(data, labels, tree, classifier = 'svm', dimred = False, useRE = True, FN = 1):
@@ -84,8 +86,12 @@ def train_tree(data, labels, tree, classifier = 'svm', dimred = False, useRE = T
         data = pca.transform(data)
     
     #recursively train the classifiers for each node in the tree
-    for n in tree[0].descendants:
-        group = _train_node(data, labels, n, classifier, dimred, numgenes)
+    if(classifier == 'knn'):
+        labels_train = cp.deepcopy(labels)
+        _,_ = _train_parentnode(data, labels_train, tree[0])
+    else:
+        for n in tree[0].descendants:
+            _ = _train_node(data, labels, n, classifier, dimred, numgenes)
 
     return tree
 
@@ -125,12 +131,53 @@ def _train_node(data, labels, n, classifier, dimred, numgenes):
     
     if(classifier == 'svm'):
         _train_svm(data, labels, group, n)
-    elif(classifier == 'knn'):
-        _train_knn(data, labels, group, n)
     else:
         _train_occ(data, labels, group, n)
         
     return group
+
+def _train_parentnode(data, labels, n):
+    '''
+    Train a knn classifier. In contrast to the linear svm and oc svm, this 
+    is trained for each parent node instead of each child node
+    
+    Parameters
+    ----------
+    data: training data
+    labels: labels of the training data
+    n: node to train the classifier for
+    classifier: which classifier to use
+    dimred: dimensionality reduction
+    numgenes: number of genes in the training data
+    
+    Return
+    ------
+    group: vector which indicates the positive samples of a node
+    
+    '''
+    
+    group = np.zeros(len(labels), dtype = int)
+
+    if n.is_leaf:
+        group[np.squeeze(np.isin(labels, n.name))] = 1
+        return group, labels
+    else:
+        for j in n.descendants:
+            group_new, labels_new = _train_parentnode(data, labels, j)
+            group[np.where(group_new == 1)[0]] = 1
+            labels[np.where(group_new == 1)[0]] = labels_new[np.where(group_new == 1)[0]]
+        if n.name != None:
+            # special case; if n has only 1 child
+            if len(n.descendants) == 1:
+                group[np.squeeze(np.isin(labels, n.name))] = 1
+            # train_knn 
+            _train_knn(data,labels,group,n)
+            # rename all group == 1 to node.name
+            group[np.squeeze(np.isin(labels, n.name))] = 1
+            labels[group==1] = n.name[0]
+                    
+    return group, labels
+
 
 
 def _find_pcs(data, labels, group, n, numgenes):
@@ -188,12 +235,17 @@ def _train_svm(data, labels, group, n):
     
 
 def _train_knn(data, labels, group, n):
-    group = _find_negativesamples(labels, group, n) 
-    idx_svm = np.where((group == 1) | (group == 2))[0]
-    data_svm = data[idx_svm]
-    group_svm = group[idx_svm]
+    idx_knn = np.where(group == 1)[0]
+    data_knn = data[idx_knn]
+    labels_knn = np.squeeze(labels[idx_knn])
+        
+    clf = KNN(weights='distance', 
+              n_neighbors=50,
+              metric='euclidean').fit(data_knn, labels_knn)
     
-    clf = KNN().fit(data_svm, group_svm)
+    if((n.name[0] == 'root') | (n.name[0] == 'root2')):
+        dist,idx = clf.kneighbors(data, return_distance=True)
+        n.set_maxDist(np.percentile(np.mean(dist[:,1:],axis=1),99))
     
     n.set_classifier(clf) #save classifier to the node
 

@@ -7,8 +7,9 @@ Created on Wed Oct 23 14:16:59 2019
 import numpy as np
 from numpy import linalg as LA
 from .utils import TreeNode
+# from utils import TreeNode
 
-def predict_labels(testdata, tree):
+def predict_labels(testdata, tree, threshold = 0.5):
     '''
     Use an hierarchical classifier to predict the labels of a test set. 
     
@@ -16,6 +17,7 @@ def predict_labels(testdata, tree):
     ----------
     testdata: data (cells x genes)
     tree: trained classification tree
+    threshold: rejection threshold, only used for knn (default = 0.5)
     
     Return
     ------
@@ -45,7 +47,7 @@ def predict_labels(testdata, tree):
     
     labels_all = []
     for idx, testpoint in enumerate(testdata):
-        
+        # print(idx)
         if useRE:   
             if rej_RE[idx]:
                 labels_all.append(tree[0].name[0])
@@ -59,28 +61,58 @@ def predict_labels(testdata, tree):
         labels.append(tree[0].name[0])
         scores.append(-1)
         
-        # continue until a leaf node is reached
-        while len(parentnode.descendants) > 0:
-                        
-            best_child = None
-            max_score = float('-inf')
+        #### If we have trained knn
+        if parentnode.classifier:
             
-            # Predict if the cell belongs to one of the descendants
-            for n in parentnode.descendants:
-                label, score = _predict_node(testpoint, n, dimred)
+            ### Reject cells based on distance
+            predict=True
+            dist,idx = parentnode.classifier.kneighbors(testpoint, return_distance=True)
+            if(np.mean(dist) > parentnode.get_maxDist()):
+                # labels.append('Distance rejection')
+                predict=False
+            
+            while (parentnode.classifier != None) & predict:
+                # print(parentnode.name)
+                label, score = _predict_node(testpoint, parentnode, dimred)
                 
-                if (label == 1) & (score > max_score):
-                    best_child = n
-                    max_score = score
-            
-            # If so, continue with the best child
-            if(best_child != None):
-                parentnode = best_child
-                scores.append(max_score)
-                labels.append(best_child.name[0])
-            # Else, stop
-            else:
-                break
+                #If score higher than threshold -> iterate further over tree
+                if score > threshold:
+                    labels.append(label[0])
+                    oldparent = parentnode
+                    for n in parentnode.descendants:
+                        if n.name == label:
+                            parentnode = n
+                    if parentnode.name == oldparent.name:
+                        break
+                else:
+                    break
+                
+        
+        
+        #### If we have trained svm or svm oc
+        # continue until a leaf node is reached
+        else:
+            while len(parentnode.descendants) > 0:
+                            
+                best_child = None
+                max_score = float('-inf')
+                
+                # Predict if the cell belongs to one of the descendants
+                for n in parentnode.descendants:
+                    label, score = _predict_node(testpoint, n, dimred)
+                    
+                    if (label == 1) & (score > max_score):
+                        best_child = n
+                        max_score = score
+                
+                # If so, continue with the best child
+                if(best_child != None):
+                    parentnode = best_child
+                    scores.append(max_score)
+                    labels.append(best_child.name[0])
+                # Else, stop
+                else:
+                    break
         
         # Label cell with last predicted label
         labels_all.append(labels[-1])

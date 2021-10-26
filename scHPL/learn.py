@@ -26,6 +26,7 @@ def learn_tree(data: anndata,
                useRE: bool = True,
                FN: float = 1,
                threshold: float = 0.25,
+               rej_threshold: float = 0.5,
                return_missing: bool = True
 ):
     
@@ -61,6 +62,9 @@ def learn_tree(data: anndata,
         for the reconstruction error.
     threshold: Float = 0.25
         Threshold to use when matching the labels.
+    rej_threshold: Float = 0.5
+        If prediction probability lower that this threshold, a cell is rejected.
+        (only used when using kNN classifier)
     return_missing: Boolean = True
         If 'True' missing nodes are returned to the user, else missing
         nodes are attached to the root node.
@@ -112,8 +116,8 @@ def learn_tree(data: anndata,
         tree_2 = train_tree(data_2, labels_2, tree_2, classifier, dimred, useRE, FN)
         
         # Predict labels other dataset
-        labels_2_pred = predict_labels(data_2, tree)
-        labels_1_pred = predict_labels(data_1, tree_2)
+        labels_2_pred = predict_labels(data_2, tree, threshold=rej_threshold)
+        labels_1_pred = predict_labels(data_1, tree_2, threshold=rej_threshold)
         
         # Update first tree and labels second dataset
         tree, mis_pop = update_tree(labels_1.reshape(-1,1), 
