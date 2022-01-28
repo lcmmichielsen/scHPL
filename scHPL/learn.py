@@ -24,7 +24,7 @@ def learn_tree(data: anndata,
                classifier: str = 'svm',
                dimred: bool = False,
                useRE: bool = True,
-               FN: float = 1,
+               FN: float = 0.5,
                threshold: float = 0.25,
                rej_threshold: float = 0.5,
                return_missing: bool = True
@@ -57,7 +57,7 @@ def learn_tree(data: anndata,
         If 'True' PCA is applied before training the classifier.
     useRE: Boolean = True
         If 'True', cells are also rejected based on the reconstruction error.
-    FN: Float = 1
+    FN: Float = 0.5
         Percentage of false negatives allowed when determining the threshold
         for the reconstruction error.
     threshold: Float = 0.25

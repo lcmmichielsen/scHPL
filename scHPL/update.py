@@ -40,15 +40,16 @@ def update_tree(y_true1, y_pred1, y_true2, y_pred2, threshold, tree, return_miss
 
     # Construct binary confusion matrices
     y_true1 = _true_labels_1(y_true1, tree)
+    
     BC1 = _confusion_binary(y_true1, y_pred1, threshold, '1')
     BC2 = _confusion_binary(y_true2, y_pred2, threshold, '2')
-    
+
     # Remove non-leaf nodes from the rows of the first matrix
     BC1 = BC1.reindex(index = tree[0].get_leaf_names_first(), fill_value = False)
     
     # Add the binary matrices
     X = BC2.add(BC1.T, fill_value = 0)
-    
+        
     # Find matches
     pop2 = _match_trees(X, tree, pop2)
             
@@ -81,9 +82,9 @@ def _confusion_binary(y_true, y_pred, threshold, file_name):
     conf = confusion_matrix(y_true, y_pred)
     NC = np.divide(conf,np.sum(conf.values, axis = 1, keepdims=True))
 
-    #print('Normalized CM')
-    #print(NC)
-    #pd.DataFrame(NC).to_csv('NC' + file_name + '.csv')
+    # print('Normalized CM')
+    # print(NC)
+    # pd.DataFrame(NC).to_csv('NC' + file_name + '.csv')
 
     # Convert normalized confusion matrix to binary confusion matrix
     BC = NC > 1
@@ -236,12 +237,30 @@ def _find_scenario1(i, j, idx, jdx, rowsum, colsum, binary, name_root1, name_roo
         CP_D2_complex = rowsum_CP_D2.index.values[np.where(rowsum_CP_D2 > 1)[0]]
         CP_D2_complex = CP_D2_complex[np.where(CP_D2_complex != name_root2)[0]]
 
-        if len(CP_D2_complex) > 0:
+        
+        if(CP_D1 == name_root1):
+            for CP_D2_i in CP_D2_idx:
+                if rowsum[CP_D2_i] == 1:
+                    CP_D2 = binary.index[CP_D2_i]
+                    CP_D2_node = TreeNode([CP_D2])
+                    tree[0].add_descendant(CP_D2_node)
+                    pop2.loc[CP_D2, 'Added'] = 1
+                    binary.iloc[CP_D2_i,idx] = False
+                    
+            
+            # Check for each of the CP_D2 populations if they have more matches
+            # If more matches --> ignore for now
+            # If one match --> attach to root node
+            
             return binary, pop2
         
-        CP_D2 = binary.index.values[CP_D2_idx]
-        pop2 = _split_node(tree, CP_D1, CP_D2, name_root2, pop2)
-        binary.iloc[:,idx] = False       
+        else:
+            if len(CP_D2_complex) > 0:
+                return binary, pop2
+            
+            CP_D2 = binary.index.values[CP_D2_idx]
+            pop2 = _split_node(tree, CP_D1, CP_D2, name_root2, pop2)
+            binary.iloc[:,idx] = False       
 
             
     return binary, pop2
