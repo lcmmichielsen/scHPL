@@ -189,9 +189,15 @@ def rename_node(old_name, new_name, tree):
     tree: updated tree
     '''
     
+    if np.shape(old_name):
+        old_name = old_name[0]
+    
+    if not np.shape(new_name):
+        new_name = [new_name]
+    
     for n in tree[0].walk(mode = 'postorder'):
-        if(np.isin(old_name, n.name)):
-            n.name = [new_name]
+        if np.isin(old_name, n.name):
+            n.name = new_name
             return tree
     
     print('Node not found, node could not be renamed.')
@@ -215,6 +221,8 @@ def remove_node(name, tree, children = True):
 
     '''
     
+    if np.shape(name):
+        name = name[0]
    
     if name == 'root':
         print('Root cannot be removed from the tree.')
@@ -261,7 +269,10 @@ def add_node(name, tree, parent, children = None):
     tree: updated tree
     '''
     
-    newnode = TreeNode([name])
+    if not np.shape(name):
+        name = [name]
+    
+    newnode = TreeNode(name)
     
     if parent == 'root':
         tree[0].add_descendant(newnode)
