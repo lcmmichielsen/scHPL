@@ -25,7 +25,7 @@ def learn_tree(data: anndata,
                dimred: bool = False,
                useRE: bool = True,
                FN: float = 0.5,
-               threshold: float = 0.25,
+               match_threshold: float = 0.25,
                rej_threshold: float = 0.5,
                return_missing: bool = True
 ):
@@ -52,7 +52,7 @@ def learn_tree(data: anndata,
     batch_added: List = None
         Indicates which batches were used to build the existing tree.
     classifier: String = 'svm'
-        Classifier to use (either 'svm' or 'svm_occ').
+        Classifier to use (either 'svm', 'svm_occ' or 'knn').
     dimred: Boolean = False
         If 'True' PCA is applied before training the classifier.
     useRE: Boolean = True
@@ -60,7 +60,7 @@ def learn_tree(data: anndata,
     FN: Float = 0.5
         Percentage of false negatives allowed when determining the threshold
         for the reconstruction error.
-    threshold: Float = 0.25
+    match_threshold: Float = 0.25
         Threshold to use when matching the labels.
     rej_threshold: Float = 0.5
         If prediction probability lower that this threshold, a cell is rejected.
@@ -124,7 +124,7 @@ def learn_tree(data: anndata,
                                            labels_1_pred.reshape(-1,1),
                                            labels_2.reshape(-1,1),
                                            labels_2_pred.reshape(-1,1),
-                                           threshold, tree, 
+                                           match_threshold, tree, 
                                            return_missing = return_missing)
         missing_pop.extend(mis_pop)
         
