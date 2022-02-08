@@ -42,25 +42,25 @@ def hierarchical_F1(true_labels, pred_labels, tree):
         set_pred = []
         
         for n in tree[0].walk('postorder'):
-            if(n.name == true_lab):
+            if(np.isin(true_lab, n.name)):
                 found += 1
-                set_true.append(n.name)
+                set_true.append(n.name[0])
                 a = n.ancestor
                 while(a != None):
-                    set_true.append(a.name)
+                    set_true.append(a.name[0])
                     a = a.ancestor
                 
                 if found == 2:
                     break
                     
-            if(n.name == pred_lab):
+            if(np.isin(pred_lab, n.name)):
                 found += 1
-                set_pred.append(n.name)
+                set_pred.append(n.name[0])
                 a = n.ancestor
                 while(a != None):
-                    if(a.name == true_lab):
+                    if(np.isin(true_lab, a.name)):
                         set_pred = []
-                    set_pred.append(a.name)
+                    set_pred.append(a.name[0])
                     a = a.ancestor
 
                 if found == 2:
