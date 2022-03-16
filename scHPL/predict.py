@@ -7,21 +7,25 @@ Created on Wed Oct 23 14:16:59 2019
 import numpy as np
 from numpy import linalg as LA
 from .utils import TreeNode
-# from utils import TreeNode
 
-def predict_labels(testdata, tree, threshold = 0.5):
-    '''
-    Use an hierarchical classifier to predict the labels of a test set. 
+def predict_labels(testdata, 
+                   tree: TreeNode, 
+                   threshold: float = 0.5):
+    '''Use the trained tree to predict the labels of a new dataset. 
     
-    Parameters
-    ----------
-    testdata: data (cells x genes)
-    tree: trained classification tree
-    threshold: rejection threshold, only used for knn (default = 0.5)
-    
-    Return
-    ------
-    Predicted labels
+        Parameters
+        ----------
+        testdata: array_like 
+            Data to classify (cells x genes)
+        tree: TreeNode
+            Trained classification tree
+        threshold: Float = 0.5
+            If prediction probability lower that this threshold, a cell is rejected.
+            (only used when using kNN classifier)
+        
+        Returns
+        ------
+        Predicted labels
     '''
     
     useRE = False
@@ -50,7 +54,8 @@ def predict_labels(testdata, tree, threshold = 0.5):
         # print(idx)
         if useRE:   
             if rej_RE[idx]:
-                labels_all.append(tree[0].name[0])
+                labels_all.append('Rejected (RE)')
+                # labels_all.append(tree[0].name[0])
                 continue
         
         testpoint = testpoint.reshape(1,-1)
@@ -68,7 +73,7 @@ def predict_labels(testdata, tree, threshold = 0.5):
             predict=True
             dist,idx = parentnode.classifier.kneighbors(testpoint, return_distance=True)
             if(np.mean(dist) > parentnode.get_maxDist()):
-                # labels.append('Distance rejection')
+                labels.append('Rejection (dist)')
                 predict=False
             
             while (parentnode.classifier != None) & predict:
@@ -120,19 +125,17 @@ def predict_labels(testdata, tree, threshold = 0.5):
     return np.asarray(labels_all)
         
 def _predict_node(testpoint, n, dimred):
-    '''
-    Use the local classifier of a node to predict the label of a cell
+    '''Use the local classifier of a node to predict the label of a cell.
     
     Parameters
     ----------
     testpoint: data (1 x genes)
     n: node of the tree
     
-    Return
-    ------
+    Returns
+    -------
     label: indicates whether the samples is positive (1)
     score: signed distance of a cell to the decision boundary
-    
     '''
     
     testpoint_transformed = testpoint

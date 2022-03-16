@@ -10,27 +10,38 @@ import pandas as pd
 from .utils import TreeNode
 from .evaluate import confusion_matrix
 
-def update_tree(y_true1, y_pred1, y_true2, y_pred2, threshold, tree, return_missing = True):
-    '''
-    Match the labels of two datasets 
+def update_tree(tree: TreeNode, 
+                y_true1, 
+                y_pred1, 
+                y_true2, 
+                y_pred2, 
+                threshold: float = 0.25, 
+                attach_missing: bool = False, 
+                print_conf: bool = False):
+    '''Match the labels of two datasets and update the tree.
     
-    Parameters
-    ----------
-    y_true1: true labels of dataset 1 
-    y_pred1: predicted labels of dataset 1 (predicted by tree2)
-    y_true2: true labels of dataset 2 
-    y_pred2: predicted labels of dataset 2 (predicted by tree1)
-    threshold: threshold used to create the binary confusion matrix
-    tree: tree belonging to dataset 1
-    return_missing: indicates what to do with the populations from dataset2
-    that cannot be added to the tree due to complex scenarios: True - return 
-    populations to the user, False - add populations to the root 
-    
-    Return
-    ------
-    tree: the updated tree
-    missing_populations: list of the populations that are missing from the 
-    tree
+        Parameters
+        ----------
+        tree: TreeNode 
+            Tree belonging to dataset 1
+        y_true1: array_like
+            True labels of dataset 1 
+        y_pred1: array_like
+            Predicted labels of dataset 1 (predicted by tree2)
+        y_true2: array_like
+            True labels of dataset 2 
+        y_pred2: array_like
+            Predicted labels of dataset 2 (predicted by tree1)
+        threshold: Float = 0.25
+                Threshold to use when matching the labels.
+        attach_missing: Boolean = False
+            If 'True' missing nodes are attached to the root node.
+        
+        Returns
+        ------
+        tree: the updated tree
+        missing_populations: list of the populations that are missing from the 
+        tree
     '''
     
     #
@@ -41,8 +52,17 @@ def update_tree(y_true1, y_pred1, y_true2, y_pred2, threshold, tree, return_miss
     # Construct binary confusion matrices
     y_true1 = _true_labels_1(y_true1, tree)
     
-    BC1 = _confusion_binary(y_true1, y_pred1, threshold, '1')
-    BC2 = _confusion_binary(y_true2, y_pred2, threshold, '2')
+    BC1 = _confusion_binary(y_true1, y_pred1, threshold, '1', print_conf)
+    BC2 = _confusion_binary(y_true2, y_pred2, threshold, '2', print_conf)
+    
+    idx = np.where((y_pred1 == 'Rejected (RE)') | (y_pred1 == 'Rejection (dist)'))[0]
+    y_pred1[idx] = 'root2'
+    
+    idx = np.where((y_pred2 == 'Rejected (RE)') | (y_pred2 == 'Rejection (dist)'))[0]
+    y_pred2[idx] = tree[0].name[0]
+    
+    BC1 = _confusion_binary(y_true1, y_pred1, threshold, '1', False)
+    BC2 = _confusion_binary(y_true2, y_pred2, threshold, '2', False)
 
     # Remove non-leaf nodes from the rows of the first matrix
     BC1 = BC1.reindex(index = tree[0].get_leaf_names_first(), fill_value = False)
@@ -63,7 +83,7 @@ def update_tree(y_true1, y_pred1, y_true2, y_pred2, threshold, tree, return_miss
         print(missing_populations)
         
         # Handle missing populations
-        if return_missing == False:
+        if attach_missing:
             print('Missing populations are attached to root')
             
             for p in missing_populations:
@@ -73,18 +93,17 @@ def update_tree(y_true1, y_pred1, y_true2, y_pred2, threshold, tree, return_miss
     return tree, missing_populations
 
 
-def _confusion_binary(y_true, y_pred, threshold, file_name):
-    '''
-    Construct a binary confusion matrix
-    '''
+def _confusion_binary(y_true, y_pred, threshold, file_name, print_conf):
+    '''Construct a binary confusion matrix.'''
     
     # Construct confusion matrix
     conf = confusion_matrix(y_true, y_pred)
     NC = np.divide(conf,np.sum(conf.values, axis = 1, keepdims=True))
-
-    # print('Normalized CM')
-    # print(NC)
-    # pd.DataFrame(NC).to_csv('NC' + file_name + '.csv')
+    
+    if print_conf:
+        print('Normalized CM')
+        print(NC)
+        pd.DataFrame(NC).to_csv('NC' + file_name + '.csv')
 
     # Convert normalized confusion matrix to binary confusion matrix
     BC = NC > 1
@@ -198,8 +217,8 @@ def _find_scenario1(i, j, idx, jdx, rowsum, colsum, binary, name_root1, name_roo
     name_root2: name of the root of the second tree
     tree: classification tree belonging to dataset 1, so this tree is updated
     
-    Return
-    ------
+    Returns
+    -------
     binary: updated binary matrix
     '''
         
@@ -282,8 +301,8 @@ def _find_scenario2(i, j, idx, jdx, rowsum, colsum, binary, name_root1, name_roo
     name_root2: name of the root of the second tree
     tree: classification tree belonging to dataset 1, so this tree is updated
     
-    Return
-    ------
+    Returns
+    -------
     binary: updated binary matrix
     '''
         
@@ -453,7 +472,7 @@ def _perfect_match(old_name, match_name, pop2, tree):
     #print('Perfect match between: ', old_name, ', and:', match_name)
 
     for dn in tree[0].walk():
-        if(dn.name[0] == match_name):
+        if np.isin(dn.name, match_name).any():
             match_node = dn
     
     pop2.loc[old_name, 'Added'] = 1

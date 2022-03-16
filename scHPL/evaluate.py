@@ -12,19 +12,23 @@ import seaborn as sns
 
 from .utils import TreeNode
 
-def hierarchical_F1(true_labels, pred_labels, tree):
-    '''
-    Calculate the hierarchical F1-score
+def hierarchical_F1(true_labels, 
+                    pred_labels, 
+                    tree: TreeNode):
+    '''Calculate the hierarchical F1-score
     
-    Parameters
-    ----------
-    true_labels: vector with the true labels 
-    pred_labels: vector with the predicted labels
-    tree: classification tree used to predict the labels
-        
-    Return
-    ------
-    hF1: hierarchical F1-score
+        Parameters
+        ----------
+        true_labels: array_like
+            True labels 
+        pred_labels: array_like
+            Predicted labels
+        tree: TreeNode 
+            Classification tree used to predict the labels
+            
+        Returns
+        -------
+        hF1: hierarchical F1-score
     '''
     
     sum_p = 0
@@ -85,17 +89,18 @@ def hierarchical_F1(true_labels, pred_labels, tree):
 
 
 def confusion_matrix(true_labels, pred_labels):
-    '''
-    Construct a confusion matrix
+    '''Construct a confusion matrix.
     
-    Parameters
-    ----------
-    true_labels: vector with the true labels 
-    pred_labels: vector with the predicted labels
-        
-    Return
-    ------
-    conf: confusion matrix
+        Parameters
+        ----------
+        true_labels: array_like 
+            True labels of the dataset
+        pred_labels: array_like
+            Predicted labels
+            
+        Returns
+        -------
+        conf: confusion matrix
     '''
     
     true_labels = pd.DataFrame(true_labels).reset_index(drop=True)
@@ -106,10 +111,52 @@ def confusion_matrix(true_labels, pred_labels):
 
     return conf
 
-def heatmap(true_labels, pred_labels, order_rows = None, order_cols = None, 
-            transpose = False, cmap = 'Reds', title = None, annot=False,
-            xlabel = 'Predicted labels', ylabel = 'True labels', 
-            shape = (10,10), **kwargs):
+def heatmap(true_labels, 
+            pred_labels, 
+            order_rows: list = None, 
+            order_cols: list = None, 
+            transpose: bool = False, 
+            cmap: str = 'Reds', 
+            title: str = None, 
+            annot: bool = False,
+            xlabel: str = 'Predicted labels', 
+            ylabel: str = 'True labels', 
+            shape = (10,10), 
+            **kwargs):
+    '''Plot a confusion matrix as a heatmap.
+    
+        Parameters
+        ----------
+        true_labels: array_like
+            True labels of the dataset
+        pred_labels: array_like
+            Predicted labels
+        order_rows: List = None
+            Order of the cell types (rows)
+        order_cols: List = None
+            Order of the cell types (cols)
+        transpose: Boolean = False
+            If True, the rows become the true labels instead of the columns.
+        cmap : String = 'reds'
+            Colormap to use. Can be any matplotlib colormap
+        title : String = None
+            Title of the plot.
+        annot : Boolean = False
+            If true, the data value is added to each cell. 
+        xlabel : String = 'Predicted labels'
+            Text of the x label
+        ylabel : String = 'True labels'
+            Text of the y label
+        shape : (float, float) = (10,10)
+            Size of the plot
+        **kwargs : 
+            Other keyword args for sns.heatmap().
+
+    Returns
+    -------
+    None.
+
+    '''
 
     #Get confusion matrix & normalize
     conf = confusion_matrix(true_labels, pred_labels) 
