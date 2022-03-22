@@ -174,19 +174,23 @@ def _parse_siblings(s, **kw):
             current.append(c)
             
 
-def rename_node(old_name, new_name, tree):
-    '''
-    Function to rename a node in the tree manually.
+def rename_node(old_name, 
+                new_name: str, 
+                tree: TreeNode):
+    '''Rename a node in the tree manually.
     
-    Parameters:
-    ----------
-    old_name: old name of the node
-    new_name: new_name of the node
-    tree: tree containing the node
-    
-    Return:
-    -------
-    tree: updated tree
+        Parameters:
+        ----------
+        old_name: 
+            old name of the node (either a string of a list)
+        new_name: String
+            new_name of the node
+        tree: TreeNode
+            tree containing the node
+        
+        Returns:
+        --------
+        tree: updated tree
     '''
     
     if np.shape(old_name):
@@ -204,21 +208,25 @@ def rename_node(old_name, new_name, tree):
     
     return tree
 
-def remove_node(name, tree, children = True):
-    '''
+def remove_node(name, 
+                tree: TreeNode, 
+                children: bool = True):
+    '''Remove a node from the tree
     
 
-    Parameters
-    ----------
-    name: name of the node to remove
-    tree : tree containing this node
-    children : if True: children are also removed, if False: children are
-    rewired to parent node 
-    
-    Returns
-    -------
-    tree: updated tree
-
+        Parameters
+        ----------
+        name: String or List
+            name of the node to remove
+        tree: TreeNode
+            tree containing this node
+        children: Boolean = True
+            if True, children are also removed. If False: children are
+            rewired to parent node 
+        
+        Returns
+        -------
+        tree: updated tree
     '''
     
     if np.shape(name):
@@ -247,26 +255,31 @@ def remove_node(name, tree, children = True):
     
     print('Node not found, node could not be deleted.')
     
-    
-    
     return tree
 
-def add_node(name, tree, parent, children = None):
-    '''
-    Function to add a node to the tree manually.
+def add_node(name: str, 
+             tree: TreeNode, 
+             parent: str, 
+             children: list = None):
+    '''Add a node to the tree manually.
     
-    Parameters:
-    ----------
-    name: name of the cell population to add
-    tree: tree the node should be added to
-    parent: parent node the cell population should be added to. If the node
-    should be added to the root, this should be 'root'
-    children: if the new node is an internal node, the child nodes should 
-    also be defined. Format should be a string vector e.g. ['child1', 'child2']
-    
-    Return:
-    -------
-    tree: updated tree
+        Parameters:
+        ----------
+        name: String
+            Name of the cell population to add
+        tree: TreeNode
+            Tree the node should be added to
+        parent: String
+            Parent node the cell population should be added to. If the node
+            should be added to the root, this should be 'root'
+        children: List
+            If the new node is an internal node, the child nodes should 
+            also be defined. Format should be a list with strings e.g. 
+            ['child1', 'child2']
+        
+        Return:
+        -------
+        tree: updated tree
     '''
     
     if not np.shape(name):
@@ -319,18 +332,20 @@ def _rewire_children(newnode, parentnode, children):
     
     return 
 
-def print_tree(tree, new_nodes = []):
-    '''
-    Print a tree
+def print_tree(tree: TreeNode, 
+               new_nodes: list = []):
+    '''Print the tree
 
-    Parameters
-    ----------
-    tree : tree to print
-    new_nodes : nodes recently added to the tree, these are printed in bold
-
-    Returns
-    -------
-    None.
+        Parameters
+        ----------
+        tree : TreeNode
+            Tree to print
+        new_nodes : List = []
+            Nodes recently added to the tree, these are printed in bold
+    
+        Returns
+        -------
+        None.
 
     '''
     
