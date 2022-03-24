@@ -32,6 +32,12 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
+    doc=[
+        'sphinx',
+        'sphinx_rtd_theme',
+        'sphinx_autodoc_typehints',
+        'typing_extensions; python_version < "3.8"',
+    ],
 )
 
 
