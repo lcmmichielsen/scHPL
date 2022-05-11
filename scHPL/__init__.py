@@ -11,3 +11,7 @@ from .learn import learn_tree
 from .train import train_tree
 from .update import update_tree
 from .utils import TreeNode, add_node, create_tree, print_tree, read_tree
+try:
+    from .faissKNeighbors import FaissKNeighbors
+except:
+    None

@@ -141,7 +141,8 @@ def _predict_node(testpoint, n, dimred):
     testpoint_transformed = testpoint
     if dimred:
         pca, pcs = n.get_pca()
-        testpoint_transformed = testpoint_transformed[:,pcs]
+        if pcs:
+            testpoint_transformed = testpoint_transformed[:,pcs]
     
     clf = n.get_classifier()
     label = clf.predict(testpoint_transformed)
