@@ -5,7 +5,6 @@ Created on Wed Oct 23 11:37:16 2019
 @author: Lieke
 """
 
-from typing import Literal
 import numpy as np
 from numpy import linalg as LA
 from sklearn import svm
@@ -18,6 +17,12 @@ from scipy.stats import ttest_ind
 from .utils import TreeNode
 import copy as cp
 
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal
+
+
 @ignore_warnings(category=ConvergenceWarning)
 def train_tree(data, 
                labels, 
@@ -26,7 +31,8 @@ def train_tree(data,
                dimred: bool = False, 
                useRE: bool = True, 
                FN: float = 0.5, 
-               n_neighbors: int = 50):
+               n_neighbors: int = 50,
+               dynamic_neighbors: bool = True):
     '''Train a hierarchical classifier. 
     
         Parameters
@@ -49,6 +55,10 @@ def train_tree(data,
         n_neighbors: int = 50
             Number of neighbors for the kNN classifier (only used when 
             classifier='knn').
+        dynamic_neighbors: bool = True
+            Number of neighbors for the kNN classifier can change when a node 
+            contains a very small cell population. k is set to 
+            min(n_neighbors, smallest-cell-population)
 
         
         Returns
@@ -107,7 +117,12 @@ def train_tree(data,
     # Recursively train the classifiers for each node in the tree
     if(classifier == 'knn'):
         labels_train = cp.deepcopy(labels)
-        _,_ = _train_parentnode(data, labels_train, tree[0], n_neighbors)
+        try: 
+            labels_train = labels_train.values
+        except:
+            None
+        _,_ = _train_parentnode(data, labels_train, tree[0], n_neighbors, 
+                                dynamic_neighbors)
     else:
         for n in tree[0].descendants:
             _ = _train_node(data, labels, n, classifier, dimred, numgenes)
@@ -153,7 +168,7 @@ def _train_node(data, labels, n, classifier, dimred, numgenes):
         
     return group
 
-def _train_parentnode(data, labels, n, n_neighbors):
+def _train_parentnode(data, labels, n, n_neighbors, dynamic_neighbors):
     '''Train a knn classifier. In contrast to the linear svm and oc svm, this 
         is trained for each parent node instead of each child node
         
@@ -179,7 +194,8 @@ def _train_parentnode(data, labels, n, n_neighbors):
         return group, labels
     else:
         for j in n.descendants:
-            group_new, labels_new = _train_parentnode(data, labels, j, n_neighbors)
+            group_new, labels_new = _train_parentnode(data, labels, j, 
+                                                      n_neighbors, dynamic_neighbors)
             group[np.where(group_new == 1)[0]] = 1
             labels[np.where(group_new == 1)[0]] = labels_new[np.where(group_new == 1)[0]]
         if n.name != None:
@@ -187,7 +203,7 @@ def _train_parentnode(data, labels, n, n_neighbors):
             if len(n.descendants) == 1:
                 group[np.squeeze(np.isin(labels, n.name))] = 1
             # train_knn 
-            _train_knn(data,labels,group,n,n_neighbors)
+            _train_knn(data,labels,group,n,n_neighbors,dynamic_neighbors)
             # rename all group == 1 to node.name
             group[np.squeeze(np.isin(labels, n.name))] = 1
             labels[group==1] = n.name[0]
@@ -247,7 +263,7 @@ def _train_svm(data, labels, group, n):
     n.set_classifier(clf) #save classifier to the node
     
 
-def _train_knn(data, labels, group, n, n_neighbors):
+def _train_knn(data, labels, group, n, n_neighbors, dynamic_neighbors):
     '''Train a linear svm and attach to the node
     
         Parameters:
@@ -261,11 +277,30 @@ def _train_knn(data, labels, group, n, n_neighbors):
     data_knn = data[idx_knn]
     labels_knn = np.squeeze(labels[idx_knn])
     
+    k = int(n_neighbors)
+    
+    if dynamic_neighbors:
+        smallest_pop = np.min(np.unique(labels_knn, return_counts=True)[1])
+        if smallest_pop < n_neighbors:
+            k = int(smallest_pop)
+    
+    #print(k)
+    
     # print(np.unique(labels_knn))
     
-    clf = KNN(weights='distance', 
-              n_neighbors=n_neighbors,
-              metric='euclidean').fit(data_knn, labels_knn)
+    # Check if FAISS is installed, if not use sklearn KNN
+    try:
+        import faiss
+        from .faissKNeighbors import FaissKNeighbors 
+        clf = FaissKNeighbors(k=k)
+        clf.fit(data_knn, labels_knn)
+        #print('Using FAISS library')
+
+    except:
+        #print('Using KNN')
+        clf = KNN(weights='distance',
+                  n_neighbors=k,
+                  metric='euclidean').fit(data_knn, labels_knn)
     
     if((n.name[0] == 'root') | (n.name[0] == 'root2')):
         dist,idx = clf.kneighbors(data, return_distance=True)

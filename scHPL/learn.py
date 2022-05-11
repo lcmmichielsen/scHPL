@@ -6,13 +6,18 @@ Created on Fri Nov 22 14:11:01 2019
 """
 
 import numpy as np
-from typing import Literal
 from anndata import AnnData
 
 from .train import train_tree
 from .utils import TreeNode, create_tree, print_tree
 from .predict import predict_labels
 from .update import update_tree
+
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal
+
 
 def learn_tree(data: AnnData,
                batch_key: str,
@@ -23,6 +28,7 @@ def learn_tree(data: AnnData,
                batch_added: list = None,
                classifier: Literal['knn','svm','svm_occ'] = 'knn',
                n_neighbors: int = 50,
+               dynamic_neighbors: bool = True,
                dimred: bool = False,
                useRE: bool = True,
                FN: float = 0.5,               
@@ -57,6 +63,10 @@ def learn_tree(data: AnnData,
         n_neighbors: int = 50
             Number of neighbors for the kNN classifier (only used when 
             classifier='knn').
+        dynamic_neighbors: bool = True
+            Number of neighbors for the kNN classifier can change when a node 
+            contains a very small cell population. k is set to 
+            min(n_neighbors, smallest-cell-population)
         dimred: Boolean = False
             If 'True', PCA is applied before training the classifier.
         useRE: Boolean = True
@@ -116,12 +126,12 @@ def learn_tree(data: AnnData,
         # Train the trees
         if retrain:
             tree = train_tree(data_1, labels_1, tree, classifier, 
-                              dimred, useRE, FN, n_neighbors)
+                              dimred, useRE, FN, n_neighbors, dynamic_neighbors)
         else:
             retrain = True 
         
         tree_2 = train_tree(data_2, labels_2, tree_2, classifier, 
-                            dimred, useRE, FN, n_neighbors)
+                            dimred, useRE, FN, n_neighbors, dynamic_neighbors)
         
         # Predict labels other dataset
         labels_2_pred = predict_labels(data_2, tree, threshold=rej_threshold)
@@ -148,7 +158,7 @@ def learn_tree(data: AnnData,
     
     # Train the final tree
     tree = train_tree(data_1, labels_1, tree, classifier, dimred, useRE, FN,
-                      n_neighbors)
+                      n_neighbors, dynamic_neighbors)
     
     return tree, missing_pop
     
