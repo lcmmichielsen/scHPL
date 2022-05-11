@@ -169,10 +169,19 @@ def heatmap(true_labels,
     if order_rows is None:
         num_rows = np.shape(conf2)[0]
         order_rows = np.linspace(0, num_rows-1, num=num_rows, dtype=int)
+    else:
+        missing_rows = np.setdiff1d(order_rows, conf2.index)
+        new_rows = pd.DataFrame(np.zeros((len(missing_rows), np.shape(conf2)[1])), index = missing_rows, columns=conf2.columns)
+        conf2 = pd.concat([conf2,new_rows], axis=0)    
     
     if order_cols is None:
         num_cols = np.shape(conf2)[1]
         order_cols = np.linspace(0, num_cols-1, num=num_cols, dtype=int)
+    else:
+        missing_cols = np.setdiff1d(order_cols, conf2.columns)
+        new_cols = pd.DataFrame(np.zeros((np.shape(conf2)[0], len(missing_cols))), index = conf2.index, columns=missing_cols)
+        conf2 = pd.concat([conf2,new_cols], axis=1)    
+
     
     plt.figure(figsize=shape)
     if annot:
@@ -192,5 +201,4 @@ def heatmap(true_labels,
     if ylabel is not None:
         plt.ylabel(ylabel, fontsize = 14)
     
-    plt.show()
-    
+    return plt    
