@@ -14,7 +14,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="scHPL", 
-    version="0.0.9",
+    version="1.0.0",
     author="Lieke Michielsen",
     author_email="l.c.m.michielsen@tudelft.nl",
     description="Hierarchical progressive learning pipeline for single-cell RNA-sequencing datasets",
@@ -32,6 +32,12 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
+    doc=[
+        'sphinx',
+        'sphinx_rtd_theme',
+        'sphinx_autodoc_typehints',
+        'typing_extensions; python_version < "3.8"',
+    ],
 )
 
 

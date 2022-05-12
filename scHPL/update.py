@@ -8,28 +8,40 @@ Created on Tue Oct 29 13:58:14 2019
 import numpy as np
 import pandas as pd
 from .utils import TreeNode
+from .evaluate import confusion_matrix
 
-def update_tree(y_true1, y_pred1, y_true2, y_pred2, threshold, tree, return_missing = True):
-    '''
-    Match the labels of two datasets 
+def update_tree(tree: TreeNode, 
+                y_true1, 
+                y_pred1, 
+                y_true2, 
+                y_pred2, 
+                threshold: float = 0.25, 
+                attach_missing: bool = False, 
+                print_conf: bool = False):
+    '''Match the labels of two datasets and update the tree.
     
-    Parameters
-    ----------
-    y_true1: true labels of dataset 1 
-    y_pred1: predicted labels of dataset 1 (predicted by tree2)
-    y_true2: true labels of dataset 2 
-    y_pred2: predicted labels of dataset 2 (predicted by tree1)
-    threshold: threshold used to create the binary confusion matrix
-    tree: tree belonging to dataset 1
-    return_missing: indicates what to do with the populations from dataset2
-    that cannot be added to the tree due to complex scenarios: True - return 
-    populations to the user, False - add populations to the root 
-    
-    Return
-    ------
-    tree: the updated tree
-    y_true2: the updated labels of y_true2 so that they correspond
-             to the labels of y_true1 in case of a perfect match
+        Parameters
+        ----------
+        tree: TreeNode 
+            Tree belonging to dataset 1
+        y_true1: array_like
+            True labels of dataset 1 
+        y_pred1: array_like
+            Predicted labels of dataset 1 (predicted by tree2)
+        y_true2: array_like
+            True labels of dataset 2 
+        y_pred2: array_like
+            Predicted labels of dataset 2 (predicted by tree1)
+        threshold: Float = 0.25
+                Threshold to use when matching the labels.
+        attach_missing: Boolean = False
+            If 'True' missing nodes are attached to the root node.
+        
+        Returns
+        ------
+        tree: the updated tree
+        missing_populations: list of the populations that are missing from the 
+        tree
     '''
     
     #
@@ -38,56 +50,61 @@ def update_tree(y_true1, y_pred1, y_true2, y_pred2, threshold, tree, return_miss
                         columns=['Added', 'Perfect match'])    
 
     # Construct binary confusion matrices
-    BC1 = _confusion_binary(y_true1, y_pred1, threshold, '1')
-    BC2 = _confusion_binary(y_true2, y_pred2, threshold, '2')
+    y_true1 = _true_labels_1(y_true1, tree)
     
+    BC1 = _confusion_binary(y_true1, y_pred1, threshold, '1', print_conf)
+    BC2 = _confusion_binary(y_true2, y_pred2, threshold, '2', print_conf)
+    
+    idx = np.where((y_pred1 == 'Rejected (RE)') | (y_pred1 == 'Rejection (dist)'))[0]
+    y_pred1[idx] = 'root2'
+    
+    idx = np.where((y_pred2 == 'Rejected (RE)') | (y_pred2 == 'Rejection (dist)'))[0]
+    y_pred2[idx] = tree[0].name[0]
+    
+    BC1 = _confusion_binary(y_true1, y_pred1, threshold, '1', False)
+    BC2 = _confusion_binary(y_true2, y_pred2, threshold, '2', False)
+
     # Remove non-leaf nodes from the rows of the first matrix
-    BC1 = BC1.reindex(index = tree[0].get_leaf_names(), fill_value = False)
+    BC1 = BC1.reindex(index = tree[0].get_leaf_names_first(), fill_value = False)
     
     # Add the binary matrices
     X = BC2.add(BC1.T, fill_value = 0)
-    
+        
     # Find matches
-    y_true2, pop2 = _match_trees(X, tree, y_true2, pop2)
+    pop2 = _match_trees(X, tree, pop2)
             
     idx_missing = np.where(pop2.iloc[:,0] == 0)[0]
+    missing_populations = []
     
     if len(idx_missing) > 0:
-        missing_populations = pop2.index[idx_missing]
+        missing_populations = pop2.index[idx_missing].values
         
         print('These populations are missing from the tree: ')
         print(missing_populations)
         
         # Handle missing populations
-        if return_missing == False:
+        if attach_missing:
             print('Missing populations are attached to root')
             
             for p in missing_populations:
-                newnode = TreeNode(p)
+                newnode = TreeNode([p])
                 tree[0].add_descendant(newnode)
 
-    return tree, y_true2
+    return tree, missing_populations
 
 
-def _confusion_binary(y_true, y_pred, threshold, file_name):
-    '''
-    Construct a binary confusion matrix
-    '''
+def _confusion_binary(y_true, y_pred, threshold, file_name, print_conf):
+    '''Construct a binary confusion matrix.'''
     
-    # Construct normalized confusion matrix
-    num_cluster = len(np.unique(y_true))
-    num_pred = len(np.unique(y_pred))
-    NC = pd.DataFrame(np.zeros([num_cluster,num_pred]),
-                      columns = np.unique(y_pred), 
-                      index = np.unique(y_true))
-                      
-    for i_true in np.unique(y_true):
-        a = np.squeeze(y_true == i_true)
-        for j_pred in np.unique(y_pred):
-            b = np.squeeze(y_pred == j_pred)
-            NC.loc[i_true,j_pred] = sum(a & b)/ sum(a)
+    # Construct confusion matrix
+    conf = confusion_matrix(y_true, y_pred)
+    NC = np.divide(conf,np.sum(conf.values, axis = 1, keepdims=True))
+    
+    if print_conf:
+        print('Normalized CM')
+        print(NC)
+        pd.DataFrame(NC).to_csv('NC' + file_name + '.csv')
 
-   
     # Convert normalized confusion matrix to binary confusion matrix
     BC = NC > 1
     
@@ -122,7 +139,7 @@ def _confusion_binary(y_true, y_pred, threshold, file_name):
     
     return BC
 
-def _match_trees(X, tree, y_true, pop2):
+def _match_trees(X, tree, pop2):
     '''
     Next, we check whether it is possible to match the trees. If either rowsums
     or colsums is bigger than 0, it is possible to match the trees (i.e. a 
@@ -132,7 +149,7 @@ def _match_trees(X, tree, y_true, pop2):
     node is NOT a leaf node. 
     '''
     
-    name_root1 = tree[0].name
+    name_root1 = tree[0].name[0]
     name_root2 = 'root2'
 
     binary = X > 0
@@ -148,17 +165,17 @@ def _match_trees(X, tree, y_true, pop2):
     strict.iloc[:,tokeep] = binary.iloc[:,tokeep]
     
     # scan binary matrix
-    binary, y_true, pop2 = _scan_binary(binary, name_root1, name_root2, y_true, tree, pop2)
+    binary, pop2 = _scan_binary(binary, name_root1, name_root2, tree, pop2)
 
-    strict.iloc[binary.values == False] = False
+    strict.values[binary.values == False] = False
     
     # scan strict matrix if needed
     if (np.any(strict)):
-        binary, y_true, pop2 = _scan_binary(strict, name_root1, name_root2, y_true, tree, pop2)
+        binary, pop2 = _scan_binary(strict, name_root1, name_root2, tree, pop2)
     
-    return y_true, pop2
+    return pop2
 
-def _scan_binary(binary, name_root1, name_root2, y_true, tree, pop2):
+def _scan_binary(binary, name_root1, name_root2, tree, pop2):
     
     colsum = np.sum(binary, axis = 0)
     rowsum = np.sum(binary, axis = 1)
@@ -167,13 +184,23 @@ def _scan_binary(binary, name_root1, name_root2, y_true, tree, pop2):
         for jdx, j in enumerate(rowsum):
                         
             if binary.iloc[jdx,idx]:
-                binary, y_true, pop2 = _find_scenario(i,j,idx,jdx,rowsum, colsum,
+                binary, pop2 = _find_scenario1(i,j,idx,jdx,rowsum, colsum,
                                                binary,name_root1,name_root2,
-                                               y_true,tree, pop2)
-    
-    return binary, y_true, pop2
+                                               tree, pop2)
+    colsum = np.sum(binary, axis = 0)
+    rowsum = np.sum(binary, axis = 1)
 
-def _find_scenario(i, j, idx, jdx, rowsum, colsum, binary, name_root1, name_root2, y_true, tree, pop2):
+    for idx, i in enumerate(colsum):
+        for jdx, j in enumerate(rowsum):
+                        
+            if binary.iloc[jdx,idx]:
+                binary, pop2 = _find_scenario2(i,j,idx,jdx,rowsum, colsum,
+                                               binary,name_root1,name_root2,
+                                               tree, pop2)
+    
+    return binary, pop2
+
+def _find_scenario1(i, j, idx, jdx, rowsum, colsum, binary, name_root1, name_root2, tree, pop2):
     '''
     Find the corresponding scenario between two matching labels
     
@@ -188,14 +215,11 @@ def _find_scenario(i, j, idx, jdx, rowsum, colsum, binary, name_root1, name_root
     binary: binary matrix
     name_root1: name of the root of the first tree
     name_root2: name of the root of the second tree
-    y_true: labels of the second dataset that need to be changed in case of
-            a perfect match
     tree: classification tree belonging to dataset 1, so this tree is updated
     
-    Return
-    ------
+    Returns
+    -------
     binary: updated binary matrix
-    y_true: updated labels    
     '''
         
     # Simple scenario
@@ -203,7 +227,7 @@ def _find_scenario(i, j, idx, jdx, rowsum, colsum, binary, name_root1, name_root
         
         # Check if root1 is involved, if so -> new population
         if binary.columns.values[idx] == name_root1:
-            newnode = TreeNode(binary.index.values[jdx])
+            newnode = TreeNode([binary.index.values[jdx]])
             tree[0].add_descendant(newnode)
             pop2.loc[binary.index.values[jdx], 'Added'] = 1
             binary.iloc[jdx,idx] = False
@@ -214,9 +238,9 @@ def _find_scenario(i, j, idx, jdx, rowsum, colsum, binary, name_root1, name_root
         
         # Otherwise perfect match between two populations
         else:
-            y_true, pop2 = _perfect_match(binary.index.values[jdx], 
-                                         binary.columns.values[idx],
-                                         y_true, pop2)
+            pop2 = _perfect_match(binary.index.values[jdx], 
+                                  binary.columns.values[idx],
+                                  pop2, tree)
             binary.iloc[jdx,idx] = False
 
     
@@ -232,20 +256,63 @@ def _find_scenario(i, j, idx, jdx, rowsum, colsum, binary, name_root1, name_root
         CP_D2_complex = rowsum_CP_D2.index.values[np.where(rowsum_CP_D2 > 1)[0]]
         CP_D2_complex = CP_D2_complex[np.where(CP_D2_complex != name_root2)[0]]
 
-        if len(CP_D2_complex) > 0:
-            return binary, y_true, pop2
         
-        CP_D2 = binary.index.values[CP_D2_idx]
-        pop2 = _split_node(tree, CP_D1, CP_D2, name_root2, pop2)
-        binary.iloc[:,idx] = False
+        if(CP_D1 == name_root1):
+            for CP_D2_i in CP_D2_idx:
+                if rowsum[CP_D2_i] == 1:
+                    CP_D2 = binary.index[CP_D2_i]
+                    CP_D2_node = TreeNode([CP_D2])
+                    tree[0].add_descendant(CP_D2_node)
+                    pop2.loc[CP_D2, 'Added'] = 1
+                    binary.iloc[CP_D2_i,idx] = False
+                    
+            
+            # Check for each of the CP_D2 populations if they have more matches
+            # If more matches --> ignore for now
+            # If one match --> attach to root node
+            
+            return binary, pop2
+        
+        else:
+            if len(CP_D2_complex) > 0:
+                return binary, pop2
+            
+            CP_D2 = binary.index.values[CP_D2_idx]
+            pop2 = _split_node(tree, CP_D1, CP_D2, name_root2, pop2)
+            binary.iloc[:,idx] = False       
 
+            
+    return binary, pop2
+
+def _find_scenario2(i, j, idx, jdx, rowsum, colsum, binary, name_root1, name_root2, tree, pop2):
+    '''
+    Find the corresponding scenario between two matching labels
     
+    Parameters
+    ----------
+    i: value of the colsum
+    j: value of the rowsum
+    idx: index of the column
+    jdx: index of the  row
+    rowsum: rowsum of the binary matrix
+    colsum: colsum of the binary matrix
+    binary: binary matrix
+    name_root1: name of the root of the first tree
+    name_root2: name of the root of the second tree
+    tree: classification tree belonging to dataset 1, so this tree is updated
+    
+    Returns
+    -------
+    binary: updated binary matrix
+    '''
+        
+   
     # Multiple populations from dataset 1 involved
-    elif (i == 1) & (j > 1):
+    if (i == 1) & (j > 1):
         CP_D2 = binary.index.values[jdx]
         
         if CP_D2 == name_root2:
-            return binary, y_true, pop2
+            return binary, pop2
         
         # Find cell populations from D1 involved and check if these cell
         # populations (except for the root) are involved in a complex scenario
@@ -256,22 +323,23 @@ def _find_scenario(i, j, idx, jdx, rowsum, colsum, binary, name_root1, name_root
         CP_D1_complex = CP_D1_complex[np.where(CP_D1_complex != name_root1)[0]]
 
         if len(CP_D1_complex) > 0:
-            return binary, y_true, pop2
+            return binary, pop2
         
         CP_D1 = binary.columns.values[CP_D1_idx]
-        y_true, pop2 = _merge_node(tree, CP_D1, CP_D2, y_true, pop2)
-        pop2.loc[CP_D2, 'Added'] = 1
-        binary.iloc[jdx,:] = False
+        pop2, merged = _merge_node(tree, CP_D1, CP_D2, pop2)
+        if merged:
+            pop2.loc[CP_D2, 'Added'] = 1
+            binary.iloc[jdx,:] = False
 
     # Complex scenario, multiple CP from D1 and D2 involved
-    else:
+    elif (i > 1) & (j > 1):
         
         ### If the complex node is either 'root' or 'root2': SKIP, 
         ### We want don't want to solve this now.
         if binary.index.values[jdx] == name_root2:
-            return binary, y_true, pop2
+            return binary, pop2
         if binary.columns.values[idx] == name_root1:
-            return binary, y_true, pop2
+            return binary, pop2
         
         CP_D2_idx = np.where(binary.iloc[:,idx] == True)[0]
         CP_D2 = binary.index.values[CP_D2_idx]
@@ -291,10 +359,10 @@ def _find_scenario(i, j, idx, jdx, rowsum, colsum, binary, name_root1, name_root
             
         # Check if perfect match now
         if (len(CP_D1) == 1) & (len(CP_D2) == 1):
-            y_true, pop2 = _perfect_match(CP_D2[0], CP_D1[0], y_true, pop2)
+            pop2 = _perfect_match(CP_D2[0], CP_D1[0], pop2, tree)
             binary.loc[:,CP_D1] = False
             binary.loc[CP_D2,:] = False
-            return binary, y_true, pop2
+            return binary, pop2
         
         # Merge scenario
         if (len(CP_D1) > 1) & (len(CP_D2) == 1):
@@ -304,13 +372,14 @@ def _find_scenario(i, j, idx, jdx, rowsum, colsum, binary, name_root1, name_root
             CP_D1_complex = CP_D1_complex[np.where(CP_D1_complex != name_root1)[0]]
     
             if len(CP_D1_complex) > 0:
-                return binary, y_true, pop2
+                return binary, pop2
 
-            y_true, pop2 = _merge_node(tree, CP_D1, CP_D2[0], y_true, pop2)
-            pop2.loc[CP_D2, 'Added'] = 1
-            binary.loc[:,CP_D1] = False
-            binary.loc[CP_D2,:] = False
-            return binary, y_true, pop2
+            pop2, merged = _merge_node(tree, CP_D1, CP_D2[0], pop2)
+            if merged:
+                pop2.loc[CP_D2, 'Added'] = 1
+                binary.loc[:,CP_D1] = False
+                binary.loc[CP_D2,:] = False
+            return binary, pop2
 
 
         # Split scenario
@@ -321,12 +390,12 @@ def _find_scenario(i, j, idx, jdx, rowsum, colsum, binary, name_root1, name_root
             CP_D2_complex = CP_D2_complex[np.where(CP_D2_complex != name_root2)[0]]
     
             if len(CP_D2_complex) > 0:
-                return binary, y_true, pop2
+                return binary, pop2
 
             pop2 = _split_node(tree, CP_D1[0], CP_D2, name_root2, pop2)
             binary.loc[:,CP_D1] = False
             binary.loc[CP_D2,:] = False
-            return binary, y_true, pop2
+            return binary, pop2
 
 
         # check if it is a very complex scenario (e.g. we have a square)
@@ -339,19 +408,19 @@ def _find_scenario(i, j, idx, jdx, rowsum, colsum, binary, name_root1, name_root
         CP_D1_complex = CP_D1_complex[np.where(CP_D1_complex != name_root1)[0]]
         
         if (len(CP_D2_complex) > 1) | (len(CP_D1_complex) > 1):
-            return binary, y_true, pop2
+            return binary, pop2
         
         # Check if the difficult node is a leaf node
         CP_D1_difficult = binary.columns.values[idx]
         
-        if np.isin(CP_D1_difficult, tree[0].get_leaf_names()) == False:
+        if np.isin(CP_D1_difficult, tree[0].get_leaf_names_first()) == False:
             
             # Check is CP_D1_difficult is the common ancestor of the rest of CP_D1
             count = 0
             for dn in tree[0].walk():
-                if dn.name == CP_D1_difficult:
+                if dn.name[0] == CP_D1_difficult:
                     for dn2 in dn.walk():
-                        if np.isin(dn2.name, CP_D1):
+                        if np.isin(dn2.name[0], CP_D1):
                             count += 1
                     if count == len(CP_D1):
             
@@ -359,27 +428,29 @@ def _find_scenario(i, j, idx, jdx, rowsum, colsum, binary, name_root1, name_root
                         
                         CP_D1 = CP_D1[np.where(CP_D1 != CP_D1_difficult)[0]]
                         toadd = binary.index.values[jdx]
-                        y_true, pop2 = _merge_node(tree, CP_D1, toadd, y_true, pop2)
-                        binary.iloc[:,idx] = False
-                        binary.iloc[jdx] = False
-                        return binary, y_true, pop2
+                        pop2, merged = _merge_node(tree, CP_D1, toadd, pop2)
+                        if merged:
+                            binary.iloc[:,idx] = False
+                            binary.iloc[jdx] = False
+                        return binary, pop2
                     break
             
         else:
             if (len(CP_D2) == 2) & np.isin(name_root2, CP_D2):
                 CP_D2 = CP_D2[np.where(CP_D2 != name_root2)[0]]
                 CP_D2 = CP_D2[0]
-                y_true, pop2 = _merge_node(tree, CP_D1, CP_D2, y_true, pop2)
-                binary.iloc[:,idx] = False
-                binary.iloc[jdx] = False
+                pop2, merged = _merge_node(tree, CP_D1, CP_D2, pop2)
+                if merged:
+                    binary.iloc[:,idx] = False
+                    binary.iloc[jdx] = False
                 pop2.loc[CP_D2, 'Added'] = 1
-                return binary, y_true, pop2
+                return binary, pop2
 
             
-    return binary, y_true, pop2
+    return binary, pop2
 
 
-def _perfect_match(old_name, new_name, y_true, pop2):
+def _perfect_match(old_name, match_name, pop2, tree):
     '''
     If there is a perfect match between two populations, the name of the 
     population in dataset 2 is changed to the name of dataset 1.
@@ -387,25 +458,28 @@ def _perfect_match(old_name, new_name, y_true, pop2):
     Parameters
     ----------
     old_name: name of cell population in dataset2
-    new_name: name of cell population in dataset1
-    y_true: true labels of dataset 2
+    match_node: node with the perfect match
     pop2: dataframe that indicates which populations are added to the tree 
     and which populations have a perfect match
     
     Return
     -------
-    y_true: true labels of dataset 2, the old name is changed to the new name
     pop2: in the dataframe is indicated that there is perfect match between
     these populations
     
     '''
     
-    print('Perfect match: ', old_name, 'is now:', new_name)
-    y_true[np.where(y_true == old_name)[0]] = new_name
-    pop2.loc[old_name, 'Added'] = 1
-    pop2.loc[old_name, 'Perfect match'] = new_name
+    #print('Perfect match between: ', old_name, ', and:', match_name)
+
+    for dn in tree[0].walk():
+        if np.isin(dn.name, match_name).any():
+            match_node = dn
     
-    return y_true, pop2
+    pop2.loc[old_name, 'Added'] = 1
+    pop2.loc[old_name, 'Perfect match'] = match_node.name[0]
+    match_node.name.append(old_name)
+    
+    return pop2
 
 def _split_node(tree, CP_D1, CP_D2, name_root2, pop2):
     '''
@@ -425,15 +499,15 @@ def _split_node(tree, CP_D1, CP_D2, name_root2, pop2):
     CP_D2 = CP_D2[not_root2_idx]
     
     for n in tree[0].walk(mode = 'postorder'):
-        if(n.name == CP_D1):
+        if(n.name[0] == CP_D1):
             for name in CP_D2:
-                newnode = TreeNode(name)
+                newnode = TreeNode([name])
                 n.add_descendant(newnode)
                 pop2.loc[name, 'Added'] = 1
 
             return pop2 
         
-def _merge_node(tree, CP_D1, CP_D2, y_true, pop2):
+def _merge_node(tree, CP_D1, CP_D2, pop2):
     '''
     Function to merge existing (leaf) nodes
     
@@ -444,50 +518,50 @@ def _merge_node(tree, CP_D1, CP_D2, y_true, pop2):
            that should be rewired as children to CP_D2
     CP_D2: name (string) of the cell population of D12 that should be added
            to the tree
-    y_true: labels of dataset 2
     
     Return
     ------
-    y_true: updated labels of dataset 2
     '''
+    
+    merged = True
     
     # In the complex scenario it can happen that CP_D2 is already in the tree
     # If so -> rewire CP_D2 to this node
     for n in tree[0].walk():
-        if n.name == CP_D2:
+        if n.name[0] == CP_D2:
             CP_D2_ancestor = n.ancestor
             CP_D2_node = n
             
             for i in CP_D2_ancestor.descendants:
                 to_rewire = False
-                if i.name != CP_D2:
+                if i.name[0] != CP_D2:
                     for j in i.walk():
-                        if np.isin(j.name, CP_D1):
+                        if np.isin(j.name[0], CP_D1):
                             to_rewire = True
                     if to_rewire:
                         _add_merge_node(i, CP_D2_node, CP_D2_ancestor)
 
-            return y_true, pop2
+            return pop2, True
     
     
     # MERGE SCENARIO 1
     # If root1 is in CP_D1, we should add an extra node between
     # the root and all other to CP_D1 nodes
-    if np.isin(tree[0].name, CP_D1):
-        common = tree[0].name
-        tokeep = np.where(CP_D1 != tree[0].name)[0]
+    if np.isin(tree[0].name[0], CP_D1):
+        common = tree[0].name[0]
+        tokeep = np.where(CP_D1 != tree[0].name[0])[0]
         CP_D1 = CP_D1[tokeep]
         
-        CP_D2_node = TreeNode(CP_D2)
+        CP_D2_node = TreeNode([CP_D2])
         
         possible = True
         nodes_to_rewire = []
         for i in tree[0].descendants:
             to_rewire = False  
             for j in i.walk():
-                if np.isin(j.name, CP_D1):
+                if np.isin(j.name[0], CP_D1):
                     to_rewire = True
-                if np.isin(j.name, np.unique(y_true)):
+                if np.isin(j.name[0], pop2.index):
                     possible = False
             if to_rewire:
                 nodes_to_rewire.append(i)
@@ -496,12 +570,12 @@ def _merge_node(tree, CP_D1, CP_D2, y_true, pop2):
             for i in nodes_to_rewire:
                 _add_merge_node(i, CP_D2_node, tree[0])
             tree[0].add_descendant(CP_D2_node)
-            return y_true, pop2
+            return pop2, True
         else:
             if(len(CP_D1) == 1):
                 # perfect match
-                y_true, pop2 = _perfect_match(CP_D2, CP_D1[0], y_true, pop2)
-                return y_true, pop2
+                pop2 = _perfect_match(CP_D2, CP_D1[0], pop2, tree)
+                return pop2, True
             # else return with the other scenarios
                         
         
@@ -509,19 +583,19 @@ def _merge_node(tree, CP_D1, CP_D2, y_true, pop2):
     # If there is one CP in CP_D1 that is the ancestor of all others in CP_D1,
     # we know we have a perfect match between this node and CP_D2 
     for n in tree[0].walk():
-        if np.isin(n.name, CP_D1):
+        if np.isin(n.name[0], CP_D1):
             count = 0
             count2 = 0
-            common = n.name
+            common = n.name[0]
             for c in n.walk():
-                if np.isin(c.name, CP_D1):
+                if np.isin(c.name[0], CP_D1):
                     count += 1
                 count2 += 1
             if (count == len(CP_D1)) & (count == count2):
                 ## We have a perfect match
-                y_true, pop2 = _perfect_match(CP_D2, common, y_true, pop2)
+                pop2 = _perfect_match(CP_D2, common, pop2, tree)
 
-                return y_true, pop2
+                return pop2, True
             else:
                 ### We want to remove this node from the tomerge, because we 
                 ### want to attach the nodes under it
@@ -539,35 +613,50 @@ def _merge_node(tree, CP_D1, CP_D2, y_true, pop2):
     ## MERGE SCENARIO 3
     ## This is the classical merge
     common = _common_ancestor(CP_D1, tree)
-    CP_D2_node = TreeNode(CP_D2)
+    CP_D2_node = TreeNode([CP_D2])
     
     for n in tree[0].walk():
         
-        if n.name == common:
+        if n.name[0] == common:
+            
+            # Here first check if children of common are in pop2
+            stop = False
+            for i in n.descendants:
+                to_rewire = False
+                for j in i.walk():
+                    if np.isin(j.name[0], CP_D1):
+                        to_rewire = True
+                if to_rewire:
+                    for j in i.walk():
+                        if np.isin(j.name[0], pop2.index):
+                            stop = True
+
+            if stop:
+                return pop2, False
             
             # Check if the new node we want to add is redundant
             # If so -> perfect match
             counter2 = 0
             for i in n.descendants:
-                if np.isin(i.name, CP_D1):
+                if np.isin(i.name[0], CP_D1):
                     counter2 += 1
             
             if counter2 == len(n.descendants):
-                y_true, pop2 = _perfect_match(CP_D2, n.name, y_true, pop2)
+                pop2 = _perfect_match(CP_D2, n.name[0], pop2, tree)
                 
-                return y_true, pop2
+                return pop2, True
                             
             # Rewire the descendants of the common ancestor
             for i in n.descendants:
                 to_rewire = False
                 for j in i.walk():
-                    if np.isin(j.name, CP_D1):
+                    if np.isin(j.name[0], CP_D1):
                         to_rewire = True
                 if to_rewire:
                     _add_merge_node(i, CP_D2_node, n)
             n.add_descendant(CP_D2_node)
 
-    return y_true, pop2
+    return pop2, merged
         
     
 def _add_merge_node(n, new_ancestor, old_ancestor):  
@@ -590,7 +679,7 @@ def _add_merge_node(n, new_ancestor, old_ancestor):
     olddescendants = old_ancestor.descendants
     old_ancestor.descendants = []
     for j in olddescendants:
-        if j.name != n.name:
+        if j.name[0] != n.name[0]:
             old_ancestor.add_descendant(j)
         
     return
@@ -608,12 +697,12 @@ def _common_ancestor(CP_D1, tree):
     all_ancestors = []
     
     for n in tree[0].walk():
-        if np.isin(n.name, CP_D1):
+        if np.isin(n.name[0], CP_D1):
             ## Find the ancestor of this node and store them
             ancestors = []
             a = n.ancestor
             while a != None:
-                ancestors.append(a.name)
+                ancestors.append(a.name[0])
                 a = a.ancestor
             all_ancestors.append(ancestors)
     
@@ -631,3 +720,10 @@ def _common_ancestor(CP_D1, tree):
     
     return common_ancestor
 
+def _true_labels_1(labels, tree):
+    
+    for ln in tree[0].get_leaf_names():
+        if(len(ln) > 1):
+            labels[np.isin(labels, ln)] = ln[0]
+    
+    return labels
