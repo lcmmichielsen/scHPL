@@ -169,27 +169,28 @@ def heatmap(true_labels,
     if order_rows is None:
         num_rows = np.shape(conf2)[0]
         order_rows = np.linspace(0, num_rows-1, num=num_rows, dtype=int)
+        order_rows = np.asarray(conf2.index)
     else:
-        missing_rows = np.setdiff1d(order_rows, conf2.index)
-        new_rows = pd.DataFrame(np.zeros((len(missing_rows), np.shape(conf2)[1])), index = missing_rows, columns=conf2.columns)
-        conf2 = pd.concat([conf2,new_rows], axis=0)    
+        xx = np.setdiff1d(order_rows, conf2.index)
+        test = pd.DataFrame(np.zeros((len(xx), np.shape(conf2)[1])), index = xx, columns=conf2.columns)
+        conf2 = pd.concat([conf2,test], axis=0)    
     
     if order_cols is None:
         num_cols = np.shape(conf2)[1]
         order_cols = np.linspace(0, num_cols-1, num=num_cols, dtype=int)
+        order_cols = np.asarray(conf2.columns)
     else:
-        missing_cols = np.setdiff1d(order_cols, conf2.columns)
-        new_cols = pd.DataFrame(np.zeros((np.shape(conf2)[0], len(missing_cols))), index = conf2.index, columns=missing_cols)
-        conf2 = pd.concat([conf2,new_cols], axis=1)    
-
+        xx = np.setdiff1d(order_cols, conf2.columns)
+        test = pd.DataFrame(np.zeros((np.shape(conf2)[0], len(xx))), index = conf2.index, columns=xx)
+        conf2 = pd.concat([conf2,test], axis=1)    
     
     plt.figure(figsize=shape)
     if annot:
-        sns.heatmap(conf2.iloc[order_rows,order_cols], vmin = 0, vmax = 1, 
+        sns.heatmap(conf2.loc[order_rows,order_cols], vmin = 0, vmax = 1, 
                 cbar_kws={'label': 'Fraction'}, cmap=cmap, 
                 annot=conf.iloc[order_rows, order_cols], **kwargs)
     else:
-        sns.heatmap(conf2.iloc[order_rows,order_cols], vmin = 0, vmax = 1, 
+        sns.heatmap(conf2.loc[order_rows,order_cols], vmin = 0, vmax = 1, 
                 cbar_kws={'label': 'Fraction'}, cmap=cmap, **kwargs)
     
     if title is not None:
@@ -201,4 +202,6 @@ def heatmap(true_labels,
     if ylabel is not None:
         plt.ylabel(ylabel, fontsize = 14)
     
-    return plt    
+#     plt.show()
+    
+    return plt
