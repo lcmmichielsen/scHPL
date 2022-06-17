@@ -14,7 +14,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="scHPL", 
-    version="1.0.0",
+    version="1.0.1",
     author="Lieke Michielsen",
     author_email="l.c.m.michielsen@tudelft.nl",
     description="Hierarchical progressive learning pipeline for single-cell RNA-sequencing datasets",
