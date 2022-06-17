@@ -24,7 +24,14 @@ setuptools.setup(
     url="https://github.com/lcmmichielsen/hierarchicalprogressivelearning",
     packages=setuptools.find_packages(),
     install_requires=[
-        l.strip() for l in Path('requirements.txt').read_text('utf-8').splitlines()
+        "numpy>=1.19.2",
+        "scipy>=1.5.2",
+        "scikit-learn>=0.23.2",
+        "pandas>=1.1.2",
+        "newick~=1.0.0",
+        "anndata>=0.7.4",
+        "matplotlib>=3.3.1",
+        "seaborn>=0.11.1"
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -32,12 +39,6 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
-    doc=[
-        'sphinx',
-        'sphinx_rtd_theme',
-        'sphinx_autodoc_typehints',
-        'typing_extensions; python_version < "3.8"',
-    ],
 )
 
 
