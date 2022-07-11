@@ -12,7 +12,7 @@ scHPL requires Python 3.6 or higher. The easiest way to install scHPL is through
 
 ## General usage
 
-The ```tutorial.ipynb``` notebook explains the basics of scHPL. The [vignette folder](vignettes) contains notebooks to reproduce the inter-dataset experiments.  
+The ```tutorial.ipynb``` notebook explains the basics of scHPL. The [vignette folder](vignettes) contains notebooks to reproduce the inter-dataset experiments. See the [documentation](https://schpl.readthedocs.io/en/latest/) for more information.
 
 ## treeArches
 
