@@ -1,6 +1,7 @@
 ipykernel
 sphinx>=3.0.3
 nbconvert==6.4.3
+jinja2==3.0.3
 ipython_genutils 
 nbsphinx
 numpydoc
