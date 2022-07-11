@@ -21,7 +21,7 @@ setuptools.setup(
     license='MIT',
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/lcmmichielsen/hierarchicalprogressivelearning",
+    url="https://github.com/lcmmichielsen/scHPL",
     packages=setuptools.find_packages(),
     install_requires=[
         "numpy>=1.19.2",
@@ -39,6 +39,12 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
+    doc=[
+          'sphinx',
+          'sphinx_rtd_theme',
+          'sphinx_autodoc_typehints',
+          'typing_extensions; python_version < "3.8"',
+      ],
 )
 
 
