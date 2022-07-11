@@ -147,7 +147,7 @@ def linkcode_resolve(domain, info):
     else:
         linespec = ""
 
-    fn = os.path.relpath(fn, start=os.path.dirname(scarches.__file__))
+    fn = os.path.relpath(fn, start=os.path.dirname(scHPL.__file__))
 
     github = f"https://github.com/lcmmichielsen/scHPL/blob/master/scHPL/{fn}{linespec}"
     return github
