@@ -32,19 +32,12 @@ import scarches
 
 from urllib.request import urlretrieve
 
-notebooks_url = 'https://github.com/theislab/scarches/raw/master/notebooks/'
+notebooks_url = 'https://github.com/lcmmichielsen/scHPL/tree/master/vignettes'
 notebooks = [
-    'scanvi_surgery_pipeline.ipynb',
-    'scvi_surgery_pipeline.ipynb',
-    'totalvi_surgery_pipeline.ipynb',
-    'trvae_surgery_pipeline.ipynb',
-    'trVAE_zenodo_pipeline.ipynb',
-    'reference_building_from_scratch.ipynb',
-    'scgen_map_query.ipynb',
-    'expimap_surgery_pipeline_basic.ipynb',
-    'expimap_surgery_pipeline_advanced.ipynb',
-    'treeArches_pbmc.ipynb',
-    'treeArches_identifying_new_ct.ipynb'
+    'tutorial.ipynb',
+    'AMB-inter-dataset.ipynb',
+    'brain-inter-dataset.ipynb',
+    'pbmc-inter-dataset.ipynb'
 ]
 
 for nb in notebooks:
@@ -55,8 +48,8 @@ for nb in notebooks:
 
 # -- Project information -----------------------------------------------------
 
-project = 'scArches'
-author = 'Marco Wagenstetter, Mohammad Lotfollahi, Mohsen Naghipourfar, Sergei Rybakov'
+project = 'scHPL'
+author = 'Lieke Michielsen'
 copyright = f'{datetime.now():%Y}, ' + author
 
 pygments_style = 'sphinx'
@@ -64,8 +57,8 @@ todo_include_todos = True
 html_theme_options = dict(navigation_depth=3, titles_only=False)
 html_context = dict(
     display_github=True,
-    github_user='theislab',
-    github_repo='scarches',
+    github_user='lcmmichielsen',
+    github_repo='scHPL',
     github_version='master',
     conf_py_path='/docs/',
 )
@@ -154,5 +147,5 @@ def linkcode_resolve(domain, info):
 
     fn = os.path.relpath(fn, start=os.path.dirname(scarches.__file__))
 
-    github = f"https://github.com/theislab/scarches/blob/master/scarches/{fn}{linespec}"
+    github = f"https://github.com/lcmmichielsen/scHPL/blob/master/scHPL/{fn}{linespec}"
     return github
