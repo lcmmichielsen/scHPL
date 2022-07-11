@@ -7,14 +7,13 @@ The API reference contains detailed descriptions of the different end-user class
 .. note::
 
     This API reference only contains end-user documentation.
-    If you are looking to hack away at scArches' internals, you will find more detailed comments in the source code.
+    If you are looking to hack away at scHPL' internals, you will find more detailed comments in the source code.
 
-Import scarches as::
+Import scHPL as::
 
-    import scarches as sca
+    import scHPL
 
-After reading the data (``sca.data.read``), you can you can instantiate one of the implemented models from ``sca.models`` module (currently we support ``trVAE``,
-``scVI``, ``scANVI``, and ``TotalVI``) and train it on your dataset.
+Some text 
 
 .. toctree::
     :glob:
