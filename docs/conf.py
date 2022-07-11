@@ -32,7 +32,7 @@ import scHPL
 
 from urllib.request import urlretrieve
 
-notebooks_url = 'https://github.com/lcmmichielsen/scHPL/tree/master/vignettes'
+notebooks_url = 'https://github.com/lcmmichielsen/scHPL/raw/master/vignettes/'
 notebooks = [
     'tutorial.ipynb',
     'AMB-inter-dataset.ipynb',

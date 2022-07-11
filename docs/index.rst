@@ -25,6 +25,6 @@ scHPL is a method to match cell types.
    :hidden:
 
    tutorial
-   AMB-inter-dataset.ipynb
-   brain-inter-dataset.ipynb
-   pbmc-inter-dataset.ipynb
+   AMB-inter-dataset
+   brain-inter-dataset
+   pbmc-inter-dataset
