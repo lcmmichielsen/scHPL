@@ -35,6 +35,8 @@ from urllib.request import urlretrieve
 notebooks_url = 'https://github.com/lcmmichielsen/scHPL/raw/master/vignettes/'
 notebooks = [
     'tutorial.ipynb',
+    'treeArches_pbmc.ipynb',
+    'treeArches_identifying_new_ct.ipynb',
     'AMB-inter-dataset.ipynb',
     'brain-inter-dataset.ipynb',
     'pbmc-inter-dataset.ipynb'

@@ -25,6 +25,8 @@ scHPL is a method to match cell types.
    :hidden:
 
    tutorial
+   treeArches_pbmc
+   treeArches_identifying_new_ct
    AMB-inter-dataset
    brain-inter-dataset
    pbmc-inter-dataset
