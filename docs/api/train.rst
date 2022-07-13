@@ -1,4 +1,4 @@
-Train hierarchical classifier
+2. Train hierarchical classifier
 ======
 
 .. automodule:: scHPL.train

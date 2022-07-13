@@ -1,4 +1,4 @@
-Learn hierarchy
+1. Learn hierarchy
 ======
 
 .. automodule:: scHPL.learn

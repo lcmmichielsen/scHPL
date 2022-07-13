@@ -1,4 +1,4 @@
-Useful functions
+5. Useful functions
 ======
 
 .. automodule:: scHPL.utils

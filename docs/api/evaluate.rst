@@ -1,4 +1,4 @@
-Evaluate performance
+4. Evaluate performance
 ======
 
 .. automodule:: scHPL.evaluate

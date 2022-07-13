@@ -1,4 +1,4 @@
-Predict labels
+3. Predict labels
 ======
 
 .. automodule:: scHPL.predict
