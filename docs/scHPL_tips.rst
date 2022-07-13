@@ -7,6 +7,7 @@ Which classifier to use?
 -----------------------
 
 We advise to use:
+
 - the linear SVM when your integrated data still has a lot of dimensions (e.g. when you have used Seurat to integrate the datasets)
 - the kNN when your integrated data has less, 10-50, dimensions (e.g. when you have used scVI or Harmony to integrate the datasets)
 - the one-class SVM when your main focus is to find unseen cell populations. A downside of the one-class SVM, however, is that the classification performance drops.
