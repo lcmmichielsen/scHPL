@@ -1,7 +1,7 @@
-5. Useful functions
+Learn hierarchy
 ======
 
-.. automodule:: scHPL.utils
+.. automodule:: scHPL.learn
     :members:
     :undoc-members:
     :show-inheritance:

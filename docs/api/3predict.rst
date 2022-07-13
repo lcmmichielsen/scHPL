@@ -1,7 +1,7 @@
-2. Train hierarchical classifier
+Predict labels
 ======
 
-.. automodule:: scHPL.train
+.. automodule:: scHPL.predict
     :members:
     :undoc-members:
     :show-inheritance:
