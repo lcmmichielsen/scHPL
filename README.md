@@ -1,3 +1,5 @@
+|PyPI| |PyPIDownloads| |Docs|
+
 # Hierarchical progressive learning of cell identities in single-cell data
 
 We present a hierarchical progressive learning method which automatically finds relationships between cell populations across multiple datasets and uses this to construct a hierarchical classification tree. For each node in the tree either a linear SVM or one-class SVM, which enables the detection of unknown populations, is trained. The trained classification tree can be used to predict the labels of a new unlabeled dataset. 
@@ -24,3 +26,14 @@ All datasets used are publicly available data and can be downloaded from Zenodo.
 
 For citation and further information please refer to:
  (["Hierarchical progressive learning of cell identities in single-cell data"](https://www.nature.com/articles/s41467-021-23196-8))
+ 
+
+
+.. |PyPI| image:: https://img.shields.io/pypi/v/scHPL.svg
+   :target: https://pypi.org/project/scHPL
+
+.. |PyPIDownloads| image:: https://pepy.tech/badge/scHPL
+   :target: https://pepy.tech/project/scHPL
+
+.. |Docs| image:: https://readthedocs.org/projects/scHPL/badge/?version=latest
+   :target: https://scHPL.readthedocs.io
