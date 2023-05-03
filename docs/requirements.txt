@@ -7,3 +7,4 @@ nbsphinx
 numpydoc
 cython
 pkgconfig
+setuptools
