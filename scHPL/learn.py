@@ -29,6 +29,7 @@ def learn_tree(data: AnnData,
                classifier: Literal['knn','svm','svm_occ'] = 'knn',
                n_neighbors: int = 50,
                dynamic_neighbors: bool = True,
+               distkNN: int = 99,
                dimred: bool = False,
                useRE: bool = True,
                FN: float = 0.5,               
@@ -67,6 +68,11 @@ def learn_tree(data: AnnData,
             Number of neighbors for the kNN classifier can change when a node 
             contains a very small cell population. k is set to 
             min(n_neighbors, smallest-cell-population)
+        distkNN: int = 99
+            Used to determine the threshold for the maximum distance between a 
+            cell and it's closest neighbor of the training set. Threshold is 
+            set to the distkNN's percentile of distances within the training
+            set
         dimred: Boolean = False
             If 'True', PCA is applied before training the classifier.
         useRE: Boolean = True
@@ -126,12 +132,14 @@ def learn_tree(data: AnnData,
         # Train the trees
         if retrain:
             tree = train_tree(data_1, labels_1, tree, classifier, 
-                              dimred, useRE, FN, n_neighbors, dynamic_neighbors)
+                              dimred, useRE, FN, n_neighbors, dynamic_neighbors,
+                              distkNN)
         else:
             retrain = True 
         
         tree_2 = train_tree(data_2, labels_2, tree_2, classifier, 
-                            dimred, useRE, FN, n_neighbors, dynamic_neighbors)
+                            dimred, useRE, FN, n_neighbors, dynamic_neighbors,
+                            distkNN)
         
         # Predict labels other dataset
         labels_2_pred = predict_labels(data_2, tree, threshold=rej_threshold)
@@ -158,7 +166,7 @@ def learn_tree(data: AnnData,
     
     # Train the final tree
     tree = train_tree(data_1, labels_1, tree, classifier, dimred, useRE, FN,
-                      n_neighbors, dynamic_neighbors)
+                      n_neighbors, dynamic_neighbors, distkNN)
     
     return tree, missing_pop
     

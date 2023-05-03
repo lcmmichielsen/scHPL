@@ -32,7 +32,8 @@ def train_tree(data,
                useRE: bool = True, 
                FN: float = 0.5, 
                n_neighbors: int = 50,
-               dynamic_neighbors: bool = True):
+               dynamic_neighbors: bool = True,
+               distkNN: int = 99):
     '''Train a hierarchical classifier. 
     
         Parameters
@@ -59,6 +60,11 @@ def train_tree(data,
             Number of neighbors for the kNN classifier can change when a node 
             contains a very small cell population. k is set to 
             min(n_neighbors, smallest-cell-population)
+        distkNN: int = 99
+            Used to determine the threshold for the maximum distance between a 
+            cell and it's closest neighbor of the training set. Threshold is 
+            set to the distkNN's percentile of distances within the training
+            set
 
         
         Returns
@@ -122,7 +128,7 @@ def train_tree(data,
         except:
             None
         _,_ = _train_parentnode(data, labels_train, tree[0], n_neighbors, 
-                                dynamic_neighbors)
+                                dynamic_neighbors, distkNN)
     else:
         for n in tree[0].descendants:
             _ = _train_node(data, labels, n, classifier, dimred, numgenes)
@@ -168,7 +174,7 @@ def _train_node(data, labels, n, classifier, dimred, numgenes):
         
     return group
 
-def _train_parentnode(data, labels, n, n_neighbors, dynamic_neighbors):
+def _train_parentnode(data, labels, n, n_neighbors, dynamic_neighbors, distkNN):
     '''Train a knn classifier. In contrast to the linear svm and oc svm, this 
         is trained for each parent node instead of each child node
         
@@ -195,7 +201,8 @@ def _train_parentnode(data, labels, n, n_neighbors, dynamic_neighbors):
     else:
         for j in n.descendants:
             group_new, labels_new = _train_parentnode(data, labels, j, 
-                                                      n_neighbors, dynamic_neighbors)
+                                                      n_neighbors, dynamic_neighbors,
+                                                      distkNN)
             group[np.where(group_new == 1)[0]] = 1
             labels[np.where(group_new == 1)[0]] = labels_new[np.where(group_new == 1)[0]]
         if n.name != None:
@@ -203,7 +210,7 @@ def _train_parentnode(data, labels, n, n_neighbors, dynamic_neighbors):
             if len(n.descendants) == 1:
                 group[np.squeeze(np.isin(labels, n.name))] = 1
             # train_knn 
-            _train_knn(data,labels,group,n,n_neighbors,dynamic_neighbors)
+            _train_knn(data,labels,group,n,n_neighbors,dynamic_neighbors,distkNN)
             # rename all group == 1 to node.name
             group[np.squeeze(np.isin(labels, n.name))] = 1
             labels[group==1] = n.name[0]
@@ -263,7 +270,7 @@ def _train_svm(data, labels, group, n):
     n.set_classifier(clf) #save classifier to the node
     
 
-def _train_knn(data, labels, group, n, n_neighbors, dynamic_neighbors):
+def _train_knn(data, labels, group, n, n_neighbors, dynamic_neighbors, distkNN):
     '''Train a linear svm and attach to the node
     
         Parameters:
@@ -304,7 +311,7 @@ def _train_knn(data, labels, group, n, n_neighbors, dynamic_neighbors):
     
     if((n.name[0] == 'root') | (n.name[0] == 'root2')):
         dist,idx = clf.kneighbors(data, return_distance=True)
-        n.set_maxDist(np.percentile(np.mean(dist[:,1:],axis=1),99))
+        n.set_maxDist(np.percentile(np.mean(dist[:,1:],axis=1),distkNN))
     
     n.set_classifier(clf) #save classifier to the node
 
