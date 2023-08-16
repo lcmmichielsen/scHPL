@@ -350,11 +350,3 @@ def _find_negativesamples(labels, group, n):
 
     return group
 
-
-
-
-
-
-
-
-
