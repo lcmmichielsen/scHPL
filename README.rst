@@ -39,7 +39,7 @@ For citation and further information please refer to: `"Hierarchical progressive
 .. |PyPI| image:: https://img.shields.io/pypi/v/scHPL.svg
    :target: https://pypi.org/project/scHPL
 
-.. |PyPIDownloads| image:: https://pepy.tech/badge/scHPL
+.. |PyPIDownloads| image:: https://static.pepy.tech/badge/scHPL
    :target: https://pepy.tech/project/scHPL
 
 .. |Docs| image:: https://readthedocs.org/projects/schpl/badge/?version=latest
