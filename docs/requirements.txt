@@ -2,6 +2,7 @@ ipykernel
 ipython<8.13.0
 sphinx>=3.0.3
 nbconvert==6.5.1
+sphinx_rtd_theme
 jinja2==3.0.3
 ipython_genutils 
 nbsphinx
