@@ -12,6 +12,10 @@ from .train import train_tree
 from .utils import TreeNode, create_tree, print_tree
 from .predict import predict_labels
 from .update import update_tree
+# from train import train_tree
+# from utils import TreeNode, create_tree, print_tree
+# from predict import predict_labels
+# from update import update_tree
 
 try:
     from typing import Literal
@@ -142,8 +146,8 @@ def learn_tree(data: AnnData,
                             distkNN)
         
         # Predict labels other dataset
-        labels_2_pred = predict_labels(data_2, tree, threshold=rej_threshold)
-        labels_1_pred = predict_labels(data_1, tree_2, threshold=rej_threshold)
+        labels_2_pred,_ = predict_labels(data_2, tree, threshold=rej_threshold)
+        labels_1_pred,_ = predict_labels(data_1, tree_2, threshold=rej_threshold)
         
         # Update first tree and labels second dataset
         tree, mis_pop = update_tree(tree, labels_1.reshape(-1,1),

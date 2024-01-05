@@ -7,6 +7,7 @@ Created on Wed Oct 23 14:16:59 2019
 import numpy as np
 from numpy import linalg as LA
 from .utils import TreeNode
+# from utils import TreeNode
 
 def predict_labels(testdata, 
                    tree: TreeNode, 
@@ -26,6 +27,8 @@ def predict_labels(testdata,
         Returns
         ------
         Predicted labels
+        Probability of the predicted labels (only works for kNN, since SVM
+            doesn't return probabilities)
     '''
     
     useRE = False
@@ -50,8 +53,8 @@ def predict_labels(testdata,
         dimred = True
     
     labels_all = []
+    prob_all = np.zeros((np.shape(testdata)[0],1))
     for idx, testpoint in enumerate(testdata):
-        # print(idx)
         if useRE:   
             if rej_RE[idx]:
                 labels_all.append('Rejected (RE)')
@@ -71,7 +74,7 @@ def predict_labels(testdata,
             
             ### Reject cells based on distance
             predict=True
-            dist,idx = parentnode.classifier.kneighbors(testpoint, return_distance=True)
+            dist,_ = parentnode.classifier.kneighbors(testpoint, return_distance=True)
             if(np.mean(dist) > parentnode.get_maxDist()):
                 labels.append('Rejection (dist)')
                 predict=False
@@ -83,6 +86,7 @@ def predict_labels(testdata,
                 #If score higher than threshold -> iterate further over tree
                 if score > threshold:
                     labels.append(label[0])
+                    prob_all[idx] = score
                     oldparent = parentnode
                     for n in parentnode.descendants:
                         if n.name[0] == label:
@@ -122,7 +126,8 @@ def predict_labels(testdata,
         # Label cell with last predicted label
         labels_all.append(labels[-1])
         
-    return np.asarray(labels_all)
+        
+    return np.asarray(labels_all), prob_all
         
 def _predict_node(testpoint, n, dimred):
     '''Use the local classifier of a node to predict the label of a cell.

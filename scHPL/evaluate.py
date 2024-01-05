@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from .utils import TreeNode
+# from utils import TreeNode
 
 def hierarchical_F1(true_labels, 
                     pred_labels, 
