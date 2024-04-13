@@ -53,7 +53,7 @@ class TreeNode(Node):
         """
         Add a classifier to the node.
         """
-        self.classifier = copy.deepcopy(classifier)
+        self.classifier = classifier
     
     def get_classifier(self):
         return self.classifier

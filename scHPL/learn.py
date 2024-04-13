@@ -9,7 +9,7 @@ import numpy as np
 from anndata import AnnData
 
 from .train import train_tree
-from .utils import TreeNode, create_tree, print_tree
+from .utils import TreeNode, create_tree, print_tree as print_tree_func
 from .predict import predict_labels
 from .update import update_tree
 # from train import train_tree
@@ -36,11 +36,13 @@ def learn_tree(data: AnnData,
                distkNN: int = 99,
                dimred: bool = False,
                useRE: bool = True,
-               FN: float = 0.5,               
+               FN: float = 0.5,
                rej_threshold: float = 0.5,
                match_threshold: float = 0.25,
                attach_missing: bool = False,
-               print_conf: bool = False
+               print_conf: bool = False,
+               print_tree: bool = True,
+               gpu: int | None = None
 ):
     
     '''Learn a classification tree based on multiple labeled datasets.
@@ -93,6 +95,10 @@ def learn_tree(data: AnnData,
             If 'True' missing nodes are attached to the root node.
         print_conf: Boolean = False
             Whether to print the confusion matrices during the matching step.
+        print_tree: Boolean = True
+            Whether to print the tree during the training.
+        gpu: int = None
+            GPU index to use for the Faiss library (only used when classifier='knn')
             
         Returns
         -------
@@ -120,8 +126,9 @@ def learn_tree(data: AnnData,
     labels_1 = labels[idx_1]
     data_1 = xx[idx_1]
     
-    print('Starting tree:')
-    print_tree(tree)
+    if print_tree:
+        print('Starting tree:')
+        print_tree_func(tree)
     
     for b in batch_order:
         
@@ -137,13 +144,13 @@ def learn_tree(data: AnnData,
         if retrain:
             tree = train_tree(data_1, labels_1, tree, classifier, 
                               dimred, useRE, FN, n_neighbors, dynamic_neighbors,
-                              distkNN)
+                              distkNN, gpu=gpu)
         else:
             retrain = True 
         
         tree_2 = train_tree(data_2, labels_2, tree_2, classifier, 
                             dimred, useRE, FN, n_neighbors, dynamic_neighbors,
-                            distkNN)
+                            distkNN, gpu=gpu)
         
         # Predict labels other dataset
         labels_2_pred,_ = predict_labels(data_2, tree, threshold=rej_threshold)
@@ -160,8 +167,9 @@ def learn_tree(data: AnnData,
         
         missing_pop.extend(mis_pop)
         
-        print('\nUpdated tree:')
-        print_tree(tree, np.unique(labels_2))
+        if print_tree:
+            print('\nUpdated tree:')
+            print_tree_func(tree, np.unique(labels_2))
         
         #concatenate the two datasets
         data_1 = np.concatenate((data_1, data_2), axis = 0)
