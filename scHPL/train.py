@@ -19,9 +19,9 @@ from .utils import TreeNode
 import copy as cp
 
 try:
-    from typing import Literal
+    from typing import Literal, Optional
 except ImportError:
-    from typing_extensions import Literal
+    from typing_extensions import Literal, Optional
 
 
 @ignore_warnings(category=ConvergenceWarning)
@@ -35,7 +35,7 @@ def train_tree(data,
                n_neighbors: int = 50,
                dynamic_neighbors: bool = True,
                distkNN: int = 99,
-               gpu=None):
+               gpu: Optional[int] = None):
     '''Train a hierarchical classifier. 
     
         Parameters

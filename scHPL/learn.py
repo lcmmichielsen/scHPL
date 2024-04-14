@@ -18,9 +18,9 @@ from .update import update_tree
 # from update import update_tree
 
 try:
-    from typing import Literal
+    from typing import Literal, Optional
 except ImportError:
-    from typing_extensions import Literal
+    from typing_extensions import Literal, Optional
 
 
 def learn_tree(data: AnnData,
@@ -42,7 +42,7 @@ def learn_tree(data: AnnData,
                attach_missing: bool = False,
                print_conf: bool = False,
                print_tree: bool = True,
-               gpu: int | None = None
+               gpu: Optional[int] = None
 ):
     
     '''Learn a classification tree based on multiple labeled datasets.
