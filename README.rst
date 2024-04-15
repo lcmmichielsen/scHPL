@@ -1,7 +1,7 @@
 |PyPI| |PyPIDownloads| |Docs|
 
 scHPL: Hierarchical progressive learning of cell identities in single-cell data
-=========================================================================
+
 
 .. raw:: html
 
