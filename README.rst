@@ -2,6 +2,7 @@
 
 scHPL: Hierarchical progressive learning of cell identities in single-cell data
 =========================================================================
+
 .. raw:: html
 
  <img src="https://github.com/lcmmichielsen/scHPL/blob/master/docs/scHPL.png" width="820px" align="center">
