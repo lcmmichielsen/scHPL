@@ -7,6 +7,12 @@ Created on Wed Oct 23 14:16:59 2019
 import numpy as np
 from numpy import linalg as LA
 from .utils import TreeNode
+from .faissKNeighbors import FaissKNeighbors
+try:
+    from tqdm import tqdm
+except ImportError:
+    def tqdm(x):
+        return x
 # from utils import TreeNode
 
 def predict_labels(testdata, 
@@ -60,7 +66,7 @@ def predict_labels(testdata,
     
     labels_all = []
     prob_all = np.zeros((np.shape(testdata)[0],1))
-    for idx, testpoint in enumerate(testdata):
+    for idx, testpoint in enumerate(tqdm(testdata)):
         if useRE:   
             if rej_RE[idx]:
                 labels_all.append('Rejected (RE)')
