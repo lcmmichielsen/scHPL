@@ -371,20 +371,15 @@ def _print_node(node, hor, ver_steps, fig, new_nodes):
     x, y = ([np.max([0.05, hor-0.045]), hor], [ver, ver])
     line = mlines.Line2D(x,y, lw=1)
     fig.add_artist(line)
-    
-    # Add textbox
-    if np.isin(node.name[0], new_nodes):
-        txt = r"$\bf{" + node.name[0] + "}$"
-    else:
-        txt = node.name[0]
-    
-    for n in node.name:
-        if(n != node.name[0]):
-            if np.isin(n, new_nodes):
-                txt = txt + ' & ' + r"$\bf{" + n + "}$"
-            else:
-                txt = txt + ' & ' + n
-                
+
+    def format_node(name):
+        if np.isin(name, new_nodes):
+            return r"$\bf{" + name.replace("_", "\_") + "}$"
+        else:
+            return name
+
+    txt = " & ".join([format_node(n) for n in node.name])
+
     fig.text(hor,ver, txt, size=10,
              ha = 'left', va='center',
              bbox = dict(boxstyle='round', fc='w', ec='k'))
