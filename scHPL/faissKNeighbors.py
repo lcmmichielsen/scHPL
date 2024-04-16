@@ -23,11 +23,14 @@ class FaissKNeighbors:
             self.index = faiss.IndexIVFPQ(self.index, X.shape[1], 100, 16, 8)
 
         if self.gpu is not None:
-            res = faiss.StandardGpuResources()
-            self.index = faiss.index_cpu_to_gpu(res, self.gpu, self.index)
+            self.to_gpu(self.gpu)
 
         self.index.add(X.astype(np.float32))
         self.y = y
+
+    def to_gpu(self, gpu):
+        res = faiss.StandardGpuResources()
+        self.index = faiss.index_cpu_to_gpu(res, gpu, self.index)
 
     def predict(self, X):
         distances, indices = self.index.search(X.astype(np.float32), k=self.k)
