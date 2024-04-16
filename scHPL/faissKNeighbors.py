@@ -9,17 +9,23 @@ import faiss
 import numpy as np
 
 class FaissKNeighbors:
-    def __init__(self, k=50, gpu=None):
+    def __init__(self, k=50, gpu=None, compress=False):
         self.index = None
         self.y = None
         self.k = k
         self.gpu = gpu
+        self.compress = compress
 
     def fit(self, X, y):
         self.index = faiss.IndexFlatL2(X.shape[1])
+
+        if self.compress:
+            self.index = faiss.IndexIVFPQ(self.index, X.shape[1], 100, 16, 8)
+
         if self.gpu is not None:
             res = faiss.StandardGpuResources()
             self.index = faiss.index_cpu_to_gpu(res, self.gpu, self.index)
+
         self.index.add(X.astype(np.float32))
         self.y = y
 
