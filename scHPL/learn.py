@@ -9,7 +9,7 @@ import numpy as np
 from anndata import AnnData
 
 from .train import train_tree
-from .utils import TreeNode, create_tree, print_tree as print_tree_func
+from .utils import TreeNode, create_tree, print_tree
 from .predict import predict_labels
 from .update import update_tree
 # from train import train_tree
@@ -41,7 +41,6 @@ def learn_tree(data: AnnData,
                match_threshold: float = 0.25,
                attach_missing: bool = False,
                print_conf: bool = False,
-               print_tree: bool = True,
                gpu: Optional[int] = None,
                compress: bool = False
 ):
@@ -96,8 +95,6 @@ def learn_tree(data: AnnData,
             If 'True' missing nodes are attached to the root node.
         print_conf: Boolean = False
             Whether to print the confusion matrices during the matching step.
-        print_tree: Boolean = True
-            Whether to print the tree during the training.
         gpu: int = None
             GPU index to use for the Faiss library (only used when classifier='knn')
         compress: Boolean = False
@@ -129,9 +126,8 @@ def learn_tree(data: AnnData,
     labels_1 = labels[idx_1]
     data_1 = xx[idx_1]
     
-    if print_tree:
-        print('Starting tree:')
-        print_tree_func(tree)
+    print('Starting tree:')
+    print_tree(tree)
     
     for b in batch_order:
         
@@ -170,9 +166,8 @@ def learn_tree(data: AnnData,
         
         missing_pop.extend(mis_pop)
         
-        if print_tree:
-            print('\nUpdated tree:')
-            print_tree_func(tree, np.unique(labels_2))
+        print('\nUpdated tree:')
+        print_tree(tree, np.unique(labels_2))
         
         #concatenate the two datasets
         data_1 = np.concatenate((data_1, data_2), axis = 0)
