@@ -35,8 +35,7 @@ def train_tree(data,
                n_neighbors: int = 50,
                dynamic_neighbors: bool = True,
                distkNN: int = 99,
-               gpu: Optional[int] = None,
-               compress: bool = False):
+               gpu: Optional[int] = None):
     '''Train a hierarchical classifier. 
     
         Parameters
@@ -70,9 +69,6 @@ def train_tree(data,
             set
         gpu: int | None = None
             GPU index to use for the Faiss library (only used when classifier='knn')
-        compress: bool = False
-            If 'True', the Faiss library will use a compressed index for the kNN 
-            classifier.
 
         
         Returns
@@ -136,7 +132,7 @@ def train_tree(data,
         except:
             None
         _,_ = _train_parentnode(data, labels_train, tree[0], n_neighbors, 
-                                dynamic_neighbors, distkNN, gpu=gpu, compress=compress)
+                                dynamic_neighbors, distkNN, gpu=gpu)
     else:
         for n in tree[0].descendants:
             _ = _train_node(data, labels, n, classifier, dimred, numgenes)
@@ -182,7 +178,7 @@ def _train_node(data, labels, n, classifier, dimred, numgenes):
         
     return group
 
-def _train_parentnode(data, labels, n, n_neighbors, dynamic_neighbors, distkNN, gpu=None, compress=False):
+def _train_parentnode(data, labels, n, n_neighbors, dynamic_neighbors, distkNN, gpu=None):
     '''Train a knn classifier. In contrast to the linear svm and oc svm, this 
         is trained for each parent node instead of each child node
         
@@ -195,7 +191,6 @@ def _train_parentnode(data, labels, n, n_neighbors, dynamic_neighbors, distkNN, 
         dimred: dimensionality reduction
         numgenes: number of genes in the training data
         gpu: GPU index to use for the Faiss library (only used when classifier='knn')
-        compress: If 'True', the Faiss library will use a compressed index for the kNN classifier.
         
         Return
         ------
@@ -212,7 +207,7 @@ def _train_parentnode(data, labels, n, n_neighbors, dynamic_neighbors, distkNN, 
         for j in n.descendants:
             group_new, labels_new = _train_parentnode(data, labels, j, 
                                                       n_neighbors, dynamic_neighbors,
-                                                      distkNN, gpu=gpu, compress=compress)
+                                                      distkNN, gpu=gpu)
             group[np.where(group_new == 1)[0]] = 1
             labels[np.where(group_new == 1)[0]] = labels_new[np.where(group_new == 1)[0]]
         if n.name != None:
@@ -220,7 +215,7 @@ def _train_parentnode(data, labels, n, n_neighbors, dynamic_neighbors, distkNN, 
             if len(n.descendants) == 1:
                 group[np.squeeze(np.isin(labels, n.name))] = 1
             # train_knn 
-            _train_knn(data,labels,group,n,n_neighbors,dynamic_neighbors,distkNN,gpu=gpu, compress=compress)
+            _train_knn(data,labels,group,n,n_neighbors,dynamic_neighbors,distkNN,gpu=gpu)
             # rename all group == 1 to node.name
             group[np.squeeze(np.isin(labels, n.name))] = 1
             labels[group==1] = n.name[0]
@@ -280,7 +275,7 @@ def _train_svm(data, labels, group, n):
     n.set_classifier(clf) #save classifier to the node
     
 
-def _train_knn(data, labels, group, n, n_neighbors, dynamic_neighbors, distkNN, gpu=None, compress=False):
+def _train_knn(data, labels, group, n, n_neighbors, dynamic_neighbors, distkNN, gpu=None):
     '''Train a linear svm and attach to the node
     
         Parameters:
@@ -309,7 +304,7 @@ def _train_knn(data, labels, group, n, n_neighbors, dynamic_neighbors, distkNN, 
     try:
         import faiss
         from .faissKNeighbors import FaissKNeighbors 
-        clf = FaissKNeighbors(k=k, gpu=gpu, compress=compress)
+        clf = FaissKNeighbors(k=k, gpu=gpu)
         clf.fit(data_knn, labels_knn)
         #print('Using FAISS library')
 

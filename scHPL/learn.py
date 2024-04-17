@@ -41,8 +41,7 @@ def learn_tree(data: AnnData,
                match_threshold: float = 0.25,
                attach_missing: bool = False,
                print_conf: bool = False,
-               gpu: Optional[int] = None,
-               compress: bool = False
+               gpu: Optional[int] = None
 ):
     
     '''Learn a classification tree based on multiple labeled datasets.
@@ -97,8 +96,6 @@ def learn_tree(data: AnnData,
             Whether to print the confusion matrices during the matching step.
         gpu: int = None
             GPU index to use for the Faiss library (only used when classifier='knn')
-        compress: Boolean = False
-            If 'True', the Faiss index is compressed (only used when classifier='knn')
             
         Returns
         -------
@@ -143,13 +140,13 @@ def learn_tree(data: AnnData,
         if retrain:
             tree = train_tree(data_1, labels_1, tree, classifier, 
                               dimred, useRE, FN, n_neighbors, dynamic_neighbors,
-                              distkNN, gpu=gpu, compress=compress)
+                              distkNN, gpu=gpu)
         else:
             retrain = True 
         
         tree_2 = train_tree(data_2, labels_2, tree_2, classifier, 
                             dimred, useRE, FN, n_neighbors, dynamic_neighbors,
-                            distkNN, gpu=gpu, compress=compress)
+                            distkNN, gpu=gpu)
         
         # Predict labels other dataset
         labels_2_pred,_ = predict_labels(data_2, tree, threshold=rej_threshold)
