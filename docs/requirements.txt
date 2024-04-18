@@ -11,3 +11,4 @@ numpydoc
 cython
 pkgconfig
 furo
+lxml[html_clean]
