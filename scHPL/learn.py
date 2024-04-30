@@ -18,9 +18,9 @@ from .update import update_tree
 # from update import update_tree
 
 try:
-    from typing import Literal
+    from typing import Literal, Optional
 except ImportError:
-    from typing_extensions import Literal
+    from typing_extensions import Literal, Optional
 
 
 def learn_tree(data: AnnData,
@@ -36,11 +36,12 @@ def learn_tree(data: AnnData,
                distkNN: int = 99,
                dimred: bool = False,
                useRE: bool = True,
-               FN: float = 0.5,               
+               FN: float = 0.5,
                rej_threshold: float = 0.5,
                match_threshold: float = 0.25,
                attach_missing: bool = False,
-               print_conf: bool = False
+               print_conf: bool = False,
+               gpu: Optional[int] = None
 ):
     
     '''Learn a classification tree based on multiple labeled datasets.
@@ -93,6 +94,8 @@ def learn_tree(data: AnnData,
             If 'True' missing nodes are attached to the root node.
         print_conf: Boolean = False
             Whether to print the confusion matrices during the matching step.
+        gpu: int = None
+            GPU index to use for the Faiss library (only used when classifier='knn')
             
         Returns
         -------
@@ -137,13 +140,13 @@ def learn_tree(data: AnnData,
         if retrain:
             tree = train_tree(data_1, labels_1, tree, classifier, 
                               dimred, useRE, FN, n_neighbors, dynamic_neighbors,
-                              distkNN)
+                              distkNN, gpu=gpu)
         else:
             retrain = True 
         
         tree_2 = train_tree(data_2, labels_2, tree_2, classifier, 
                             dimred, useRE, FN, n_neighbors, dynamic_neighbors,
-                            distkNN)
+                            distkNN, gpu=gpu)
         
         # Predict labels other dataset
         labels_2_pred,_ = predict_labels(data_2, tree, threshold=rej_threshold)

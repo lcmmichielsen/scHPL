@@ -9,15 +9,23 @@ import faiss
 import numpy as np
 
 class FaissKNeighbors:
-    def __init__(self, k=50):
+    def __init__(self, k=50, gpu=None):
         self.index = None
         self.y = None
         self.k = k
+        self.gpu = gpu
 
     def fit(self, X, y):
         self.index = faiss.IndexFlatL2(X.shape[1])
+        if self.gpu is not None:
+            self.to_gpu(self.gpu)
+
         self.index.add(X.astype(np.float32))
         self.y = y
+
+    def to_gpu(self, gpu):
+        res = faiss.StandardGpuResources()
+        self.index = faiss.index_cpu_to_gpu(res, gpu, self.index)
 
     def predict(self, X):
         distances, indices = self.index.search(X.astype(np.float32), k=self.k)

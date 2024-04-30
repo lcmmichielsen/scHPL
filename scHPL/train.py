@@ -19,9 +19,9 @@ from .utils import TreeNode
 import copy as cp
 
 try:
-    from typing import Literal
+    from typing import Literal, Optional
 except ImportError:
-    from typing_extensions import Literal
+    from typing_extensions import Literal, Optional
 
 
 @ignore_warnings(category=ConvergenceWarning)
@@ -34,7 +34,8 @@ def train_tree(data,
                FN: float = 0.5, 
                n_neighbors: int = 50,
                dynamic_neighbors: bool = True,
-               distkNN: int = 99):
+               distkNN: int = 99,
+               gpu: Optional[int] = None):
     '''Train a hierarchical classifier. 
     
         Parameters
@@ -66,6 +67,8 @@ def train_tree(data,
             cell and it's closest neighbor of the training set. Threshold is 
             set to the distkNN's percentile of distances within the training
             set
+        gpu: int | None = None
+            GPU index to use for the Faiss library (only used when classifier='knn')
 
         
         Returns
@@ -129,7 +132,7 @@ def train_tree(data,
         except:
             None
         _,_ = _train_parentnode(data, labels_train, tree[0], n_neighbors, 
-                                dynamic_neighbors, distkNN)
+                                dynamic_neighbors, distkNN, gpu=gpu)
     else:
         for n in tree[0].descendants:
             _ = _train_node(data, labels, n, classifier, dimred, numgenes)
@@ -175,7 +178,7 @@ def _train_node(data, labels, n, classifier, dimred, numgenes):
         
     return group
 
-def _train_parentnode(data, labels, n, n_neighbors, dynamic_neighbors, distkNN):
+def _train_parentnode(data, labels, n, n_neighbors, dynamic_neighbors, distkNN, gpu=None):
     '''Train a knn classifier. In contrast to the linear svm and oc svm, this 
         is trained for each parent node instead of each child node
         
@@ -187,6 +190,7 @@ def _train_parentnode(data, labels, n, n_neighbors, dynamic_neighbors, distkNN):
         classifier: which classifier to use
         dimred: dimensionality reduction
         numgenes: number of genes in the training data
+        gpu: GPU index to use for the Faiss library (only used when classifier='knn')
         
         Return
         ------
@@ -203,7 +207,7 @@ def _train_parentnode(data, labels, n, n_neighbors, dynamic_neighbors, distkNN):
         for j in n.descendants:
             group_new, labels_new = _train_parentnode(data, labels, j, 
                                                       n_neighbors, dynamic_neighbors,
-                                                      distkNN)
+                                                      distkNN, gpu=gpu)
             group[np.where(group_new == 1)[0]] = 1
             labels[np.where(group_new == 1)[0]] = labels_new[np.where(group_new == 1)[0]]
         if n.name != None:
@@ -211,7 +215,7 @@ def _train_parentnode(data, labels, n, n_neighbors, dynamic_neighbors, distkNN):
             if len(n.descendants) == 1:
                 group[np.squeeze(np.isin(labels, n.name))] = 1
             # train_knn 
-            _train_knn(data,labels,group,n,n_neighbors,dynamic_neighbors,distkNN)
+            _train_knn(data,labels,group,n,n_neighbors,dynamic_neighbors,distkNN,gpu=gpu)
             # rename all group == 1 to node.name
             group[np.squeeze(np.isin(labels, n.name))] = 1
             labels[group==1] = n.name[0]
@@ -271,7 +275,7 @@ def _train_svm(data, labels, group, n):
     n.set_classifier(clf) #save classifier to the node
     
 
-def _train_knn(data, labels, group, n, n_neighbors, dynamic_neighbors, distkNN):
+def _train_knn(data, labels, group, n, n_neighbors, dynamic_neighbors, distkNN, gpu=None):
     '''Train a linear svm and attach to the node
     
         Parameters:
@@ -300,7 +304,7 @@ def _train_knn(data, labels, group, n, n_neighbors, dynamic_neighbors, distkNN):
     try:
         import faiss
         from .faissKNeighbors import FaissKNeighbors 
-        clf = FaissKNeighbors(k=k)
+        clf = FaissKNeighbors(k=k, gpu=gpu)
         clf.fit(data_knn, labels_knn)
         #print('Using FAISS library')
 

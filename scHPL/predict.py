@@ -7,11 +7,18 @@ Created on Wed Oct 23 14:16:59 2019
 import numpy as np
 from numpy import linalg as LA
 from .utils import TreeNode
+from .faissKNeighbors import FaissKNeighbors
+try:
+    from tqdm import tqdm
+except ImportError:
+    def tqdm(x):
+        return x
 # from utils import TreeNode
 
 def predict_labels(testdata, 
                    tree: TreeNode, 
-                   threshold: float = 0.5):
+                   threshold: float = 0.5,
+                   gpu=None):
     '''Use the trained tree to predict the labels of a new dataset. 
     
         Parameters
@@ -51,10 +58,15 @@ def predict_labels(testdata,
         pca, pcs = tree[0].get_pca()
         testdata = pca.transform(testdata)
         dimred = True
+
+    if (tree[0].classifier and 
+        tree[0].classifier.__class__ == FaissKNeighbors and 
+        gpu is not None):
+        tree[0].classifier.to_gpu(gpu)
     
     labels_all = []
     prob_all = np.zeros((np.shape(testdata)[0],1))
-    for idx, testpoint in enumerate(testdata):
+    for idx, testpoint in enumerate(tqdm(testdata)):
         if useRE:   
             if rej_RE[idx]:
                 labels_all.append('Rejected (RE)')
