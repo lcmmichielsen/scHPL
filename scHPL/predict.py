@@ -7,7 +7,10 @@ Created on Wed Oct 23 14:16:59 2019
 import numpy as np
 from numpy import linalg as LA
 from .utils import TreeNode
-from .faissKNeighbors import FaissKNeighbors
+try:
+    from .faissKNeighbors import FaissKNeighbors
+except:
+    None
 try:
     from tqdm import tqdm
 except ImportError:
@@ -58,11 +61,14 @@ def predict_labels(testdata,
         pca, pcs = tree[0].get_pca()
         testdata = pca.transform(testdata)
         dimred = True
-
-    if (tree[0].classifier and 
-        tree[0].classifier.__class__ == FaissKNeighbors and 
-        gpu is not None):
-        tree[0].classifier.to_gpu(gpu)
+    
+    try:
+        if (tree[0].classifier and 
+            tree[0].classifier.__class__ == FaissKNeighbors and 
+            gpu is not None):
+            tree[0].classifier.to_gpu(gpu)
+    except:
+        None
     
     labels_all = []
     prob_all = np.zeros((np.shape(testdata)[0],1))
