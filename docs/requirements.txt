@@ -12,3 +12,5 @@ cython
 pkgconfig
 furo
 lxml[html_clean]
+numpy<2
+pandas<2
