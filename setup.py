@@ -24,7 +24,7 @@ setuptools.setup(
     url="https://github.com/lcmmichielsen/scHPL",
     packages=setuptools.find_packages(),
     install_requires=[
-        "numpy>=1.19.2",
+        "numpy>=1.19.2,<2",
         "scipy>=1.5.2",
         "scikit-learn>=0.23.2",
         "pandas>=1.1.2,<2.0.0",
