@@ -4,7 +4,7 @@ sphinx>=3.0.3
 nbconvert==6.5.1
 nbsphinx>=0.7
 sphinx_rtd_theme
-jinja2==3.1.4
+jinja2==3.1.6
 ipython_genutils 
 nbsphinx
 numpydoc
@@ -12,3 +12,5 @@ cython
 pkgconfig
 furo
 lxml[html_clean]
+numpy<2
+pandas<2
